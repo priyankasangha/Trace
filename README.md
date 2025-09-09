@@ -1,6 +1,7 @@
 **✨Invisible String**
 _A personal timeline app that allows users to keep track of ongoing events, such as projects or goals. Users can add events, store media, and reflect on their progress overtime._
 
+
 💡Example Use Cases:
 - Track milestones in a startup journey
 - Create a timeline for a relationship
