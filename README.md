@@ -6,7 +6,7 @@ _A personal timeline app that allows users to keep track of ongoing events, such
 - Create a timeline for a relationship
 - Document personal growth or recovery
 
-🚀 Features
+🚀 Features:
 - Add and edit timeline entries with text and media
 - Automatically sorts events by date
 - Custom tags or categories (award, graduation, date)
