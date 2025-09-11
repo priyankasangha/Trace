@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -28,7 +27,9 @@ model Event {
   year Int
   month Int?
   day Int?
-  location String?
+  country String?
+  city String?
+  place String?
   imageUrls String[]
   user User @relation(fields: [userId], references: [id])
   userId Int
@@ -49,4 +50,5 @@ model EventTag {
   tag   Tag   @relation(fields: [tagId], references: [id])
 
   @@id([eventId, tagId]) // composite PK
+  @@index([tagId]) // to speed up queries
 }
