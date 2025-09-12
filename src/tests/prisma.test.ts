@@ -9,81 +9,65 @@ describe( 'Prisma tests', () => {
         await prisma.$disconnect();
     });
 
-    it('creates an fetches a user', async () => {
+    // afterEach(async () => {
+    //     await prisma.user.deleteMany();
+    // });
+
+
+    it('creates and fetches a user', async () => {
         console.log("creating filler user");
-        const user = await prisma.user.create({
+        const userZero = await prisma.user.create({
             data: {
                 name: "Shrey",
                 email: "shreygan@gmail.com"
             }
         }); 
-        expect(user).toBeDefined();
-        expect(user.name).toBe("Shrey");
-        expect(user.email).toBe("shreygan@gmail.com");
+        expect(userZero).toBeDefined();
+        expect(userZero.name).toBe("Shrey");
+        expect(userZero.email).toBe("shreygan@gmail.com");
     });
 
+    it ('creates and fetches an event, tag, and user', async () => {
+        console.log("creating filler user")
+        const userOne = await prisma.user.create({
+            data: {
+                name: "Aleesha",
+                email: "aleesha@hotmail.com"
+            }
+        }); 
+
+        console.log("creating filler tag");
+        const tag = await prisma.tag.create({
+            data: {
+                name: "date"
+            }
+        });
+
+        console.log("creating filler event");
+        const event = await prisma.event.create({
+            data: {
+                title: "Guildford hangout",
+                description: "hangout",
+                year: 2025,
+                month: 2,
+                country: "Canada",
+                city: "Surrey",
+                place: "Guilford mall",
+                user: { connect: { id: userOne.id } },
+                tags: { create: [ { tag: { connect: { id: tag.id } } } ] }
+            },
+            include: {
+                tags: { include: { tag: true } },
+                user: true 
+            }
+        });
+        expect(userOne).toBeDefined();
+        expect(tag).toBeDefined();
+        expect(event).toBeDefined();
+        expect(event.userId).toBe(userOne.id);
+        expect(event.tags.length).toBe(1);
+        expect(event.tags[0]).toBeDefined();
+        expect((event.tags[0]!).tagId).toBe(tag.id);
+    })
+
 });
-
-// async function main() {
-// //   const users = await prisma.user.findMany();
-//     console.log("creating filler data");
-//     // create user
-//     const user = await prisma.user.create({
-//         data: {
-//             name: "Shrey",
-//             email: "shreygan@gmail.com"
-//         }
-//     });
-
-//     // create tag
-//     const tag = await prisma.tag.create({
-//         data: {
-//             name: "date"
-//         }
-//     });
-
-
-//     // create event
-//     const event  = await prisma.event.create({
-//         data: {
-//             title: "first date",
-//             description: "first date at tower beach",
-//             year: 2025,
-//             month: 2,
-//             country: "Canada",
-//             city: "Vancouver",
-//             place: "Tower Beach",
-//             user: user,
-//             userId: user.id,
-//             tags: {
-//                 connect: [
-//                     { id: tag.id }
-//                 ]
-//             },
-//             include: {
-//                 tags: { include: { tag: true } },
-//                 user: true 
-//             }
-//         }
-//     });
-//     console.log("event created");
-
-//     // get all users with their events and tags
-//     const database_users = await prisma.user.findMany({
-//         include: {
-//             events: {
-//                 include: {tags: {include: {tag: true } } }
-//             }
-//         }
-//     });
-//     //prints all the users
-//     console.log("all users with their events and tags", JSON.stringify(database_users, null, 2));
-// }
-
-// main()
-//     .catch((e) => { 
-//         console.log("error running prisma tests", e);
-//     })
-//     .finally(async () => {
-//         await prisma.$disconnect();
-//     });
