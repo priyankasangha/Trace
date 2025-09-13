@@ -3,6 +3,7 @@ import express from "express";
 import session from "express-session";
 import passport from "./config/passport.js";
 import dotenv from "dotenv";
+import eventRoutes from "./routes/events.js";
 
 // load .env variables
 dotenv.config();
@@ -12,6 +13,14 @@ const app = express();
 
 // parse JSON bodies
 app.use(express.json());
+
+// middleware:
+function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+     }
+     res.status(401).json({ error: "you must be logged in"});
+}
 
 // session required for passport
 app.use(
@@ -50,7 +59,8 @@ app.get(
     }
 );
 
-// protected route example (LATER)
+// mount route to add event
+app.use("/api/events", ensureAuthenticated, eventRoutes);
 
 // ---- START SERVER ----
 const PORT = 3000;
