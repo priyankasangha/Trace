@@ -2,6 +2,10 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import prisma from "../prisma/client.js";
 
+
+
+
+
 passport.use(
     new GoogleStrategy(
         {
@@ -12,26 +16,36 @@ passport.use(
         async (_accessToken, _refreshToken, profile, done) => {
             console.log("profile recieved");
             try {
-                let user = await prisma.user.findUnique({
-                    where: { email: profile.emails[0]?.value},
-                });
-
-                if (!user) {
-                    user = await prisma.user.create({
-                        data: {
-                            name: profile.displayName,
-                            email: profile.emails[0]?.value,
-                        },
-                    });
+                const email = profile.emails?.[0]?.value;
+                if (!email) {
+                    return done(new Error("No email found in Google profile"));
                 }
+                const user = await findOrCreateUser(email, profile.displayName);
 
                 return done(null, user);
             } catch (err) {
-                return done(err, undefined);
+                console.error("Error in GoogleStrategy:", err);
+                return done(err);
             }
         }
     )
 );
+
+// user functionality extracted:
+async function findOrCreateUser(email, name) {
+    let user = await prisma.user.findUnique({
+        where: { email: email },
+    });
+    if (!user) {
+        user = await prisma.user.create({
+            data: {
+                name: name,
+                email: email,
+            }
+        });
+    }
+    return user;
+}
 
 // makes sure we only keep user.id to keep session data small
 // runs right after authentication
@@ -47,6 +61,7 @@ passport.deserializeUser(async (id, done) => {
         const user = await prisma.user.findUnique({ where: { id} });
         done(null, user);
     } catch (err) {
+        console.error("Error in deserializeUser:", err);
         done(err, null);
     }
 });
