@@ -4,11 +4,12 @@ import { createEvent } from "../services/eventService.js";
 const router = express.Router(); 
 
 // create new event
-router.post("/", async (req, res) => {
+router.post("/:journeyId/events", async (req, res) => {
     try {
         const user = req.user;
+        const journeyId = parseInt(req.params.journeyId, 10);
         const eventData = req.body;
-        const event = await createEvent(eventData, user);
+        const event = await createEvent(eventData, user, journeyId);
         res.status(201).json(event);
     } catch (err) {
          res.status(400).json({ error: err.message });

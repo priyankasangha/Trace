@@ -55,7 +55,7 @@ app.get(
     (req, res) => {
         // Successful authentication, redirect home.
         const user = req.user;
-        res.send(`Hello ${user?.name}, you have been logged in! You can close this window and return to the app.`);
+        res.send(`Hello ${user?.name}, you serve hella cunt.`);
     }
 );
 

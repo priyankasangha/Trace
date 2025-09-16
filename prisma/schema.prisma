@@ -17,7 +17,28 @@ model User {
   id Int @id @default(autoincrement())
   name String
   email String @unique
-  events Event[] // one user can have many events
+  journeys JourneyUser[] // one user can be the journey user in many journeys
+}
+
+model Journey {
+  id Int @id @default(autoincrement())
+  title String
+  startYear Int
+  events Event[]
+  user JourneyUser[]
+}
+
+model JourneyUser {
+  userId Int
+  journeyId Int
+  
+  user User @relation(fields: [userId], references: [id])
+  journey Journey @relation(fields: [journeyId], references: [id])
+
+   role String //  owner, collaborator, viewer
+
+   @@id([userId, journeyId]) // composite id
+   @@index([journeyId])
 }
 
 model Event {
@@ -30,10 +51,11 @@ model Event {
   country String?
   city String?
   place String?
-  imageUrls String[]
-  user User @relation(fields: [userId], references: [id])
-  userId Int
-  tags EventTag[]
+  imageUrls String[]?
+
+  journey Journey @relation(fields: [journeyId], references: [id])
+  journeyId Int
+  tags EventTag[]?
 }
 
 model Tag {
@@ -48,6 +70,7 @@ model EventTag {
 
   event Event @relation(fields: [eventId], references: [id])
   tag   Tag   @relation(fields: [tagId], references: [id])
+
 
   @@id([eventId, tagId]) // composite PK
   @@index([tagId]) // to speed up queries
