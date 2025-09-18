@@ -24,7 +24,7 @@ model Journey {
   id Int @id @default(autoincrement())
   title String
   startYear Int
-  events Event[]
+  events Event[]?
   user JourneyUser[]
 }
 

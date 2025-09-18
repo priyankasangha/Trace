@@ -33,7 +33,7 @@ export async function createEvent(data, user, journeyId) {
 export async function editEvent(data, user, journeyId, eventId) {
     isUserLoggedIn(user);
     await checkJourney(journeyId);
-    const event = await doesEventExistInJourney(eventId, journeyId);
+    await doesEventExistInJourney(eventId, journeyId);
 
     await isUserValid(user, journeyId);
 
@@ -93,6 +93,8 @@ export async function deleteEvent(data, user, journeyId, eventId) {
         }
     });
 }
+
+// ADD FUNCTION THAT GETS ALL EVENTS FOR A JOURNEY
 
 
 
