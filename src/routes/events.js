@@ -1,19 +1,23 @@
-import express from "express";
-import { createEvent } from "../services/eventService.js";
+import express from 'express';
+import {
+  createEvent,
+  editEvent,
+  deleteEvent,
+} from '../services/eventService.js';
 
-const router = express.Router(); 
+const router = express.Router();
 
 // create new event
-router.post("/:journeyId/events", async (req, res) => {
-    try {
-        const user = req.user;
-        const journeyId = parseInt(req.params.journeyId, 10);
-        const eventData = req.body;
-        const event = await createEvent(eventData, user, journeyId);
-        res.status(201).json(event);
-    } catch (err) {
-         res.status(400).json({ error: err.message });
-    }
+router.post('/:journeyId/events', async (req, res) => {
+  try {
+    const user = req.user;
+    const journeyId = parseInt(req.params.journeyId, 10);
+    const eventData = req.body;
+    const event = await createEvent(eventData, user, journeyId);
+    res.status(201).json(event);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 export default router;

@@ -33,7 +33,7 @@ model JourneyUser {
   journeyId Int
   
   user User @relation(fields: [userId], references: [id])
-  journey Journey @relation(fields: [journeyId], references: [id])
+  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
 
    role String //  owner, collaborator, viewer
 

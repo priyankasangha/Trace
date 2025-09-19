@@ -1,9 +1,10 @@
 // import express to run a web server
-import express from "express";
-import session from "express-session";
-import passport from "./config/passport.js";
-import dotenv from "dotenv";
-import eventRoutes from "./routes/events.js";
+import express from 'express';
+import session from 'express-session';
+import passport from './config/passport.js';
+import dotenv from 'dotenv';
+import eventRoutes from './routes/events.js';
+import journeyRoutes from './routes/journeys.js';
 
 // load .env variables
 dotenv.config();
@@ -16,19 +17,19 @@ app.use(express.json());
 
 // middleware:
 function ensureAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-        return next();
-     }
-     res.status(401).json({ error: "you must be logged in"});
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ error: 'you must be logged in' });
 }
 
 // session required for passport
 app.use(
-    session({
-        secret: process.env.SESSION_SECRET || "something_secret_fallback",
-        resave: false,
-        saveUninitialized: false,
-    })
+  session({
+    secret: process.env.SESSION_SECRET || 'something_secret_fallback',
+    resave: false,
+    saveUninitialized: false,
+  })
 );
 
 // initialize passport and session
@@ -38,32 +39,32 @@ app.use(passport.session());
 // ----- ROUTES -----
 
 // health check for route
-app.get("/", (_req, res) => {
-    res.send("Backend is running!");
+app.get('/', (_req, res) => {
+  res.send('Backend is running!');
 });
 
 // start authentication with Google
 app.get(
-    "/auth/google",
-    passport.authenticate("google", { scope: ["profile", "email"] })
+  '/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
 // Google redirects here after authentication
 app.get(
-    "/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: "/" }),
-    (req, res) => {
-        // Successful authentication, redirect home.
-        const user = req.user;
-        res.send(`Hello ${user?.name}, you serve hella cunt.`);
-    }
+  '/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/' }),
+  (req, res) => {
+    // Successful authentication, redirect home.
+    const user = req.user;
+    res.send(`Hello ${user?.name}, you serve hella cunt.`);
+  }
 );
 
 // mount route to add event
-app.use("/api/events", ensureAuthenticated, eventRoutes);
-
+app.use('/api/journeys/:journeyId/events', ensureAuthenticated, eventRoutes);
+app.use('api/journeys', ensureAuthenticated, journeyRoutes);
 // ---- START SERVER ----
 const PORT = 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`Server is running at http://localhost:${PORT}`);
 });
