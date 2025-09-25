@@ -1,4 +1,5 @@
 import prisma from '../prisma/client.js';
+import { JourneyRole } from '@prisma/client';
 
 /*
 create new event in the database
@@ -6,9 +7,8 @@ create new event in the database
 */
 export async function createEvent(data, user, journeyId) {
   isUserLoggedIn(user);
-  await checkJourney(journeyId);
   checkFields(data, user);
-
+  await checkJourney(journeyId);
   await isUserValid(user, journeyId);
 
   const event = await prisma.event.create({
@@ -34,7 +34,6 @@ export async function editEvent(data, user, journeyId, eventId) {
   isUserLoggedIn(user);
   await checkJourney(journeyId);
   await doesEventExistInJourney(eventId, journeyId);
-
   await isUserValid(user, journeyId);
 
   // keeps fields that are not undefined from user (like only stuff they updated)
@@ -83,8 +82,7 @@ export async function getEvent(user, journeyId, eventId) {
 export async function deleteEvent(data, user, journeyId, eventId) {
   isUserLoggedIn(user);
   await checkJourney(journeyId);
-  const event = await doesEventExistInJourney(eventId, journeyId);
-
+  await doesEventExistInJourney(eventId, journeyId);
   await isUserValid(user, journeyId);
 
   await prisma.event.delete({
@@ -151,7 +149,7 @@ async function isUserValid(user, journeyId) {
     },
   });
 
-  if (!member || member.role == 'viewer') {
+  if (!member || member.role == JourneyRole.VIEWER) {
     throw new Error("this user isn't authorized to change the events");
   }
 }
