@@ -17,13 +17,19 @@ model User {
   id Int @id @default(autoincrement())
   name String
   email String @unique
+  profilePic String? // url profile pic
+
   journeys JourneyUser[] // one user can be the journey user in many journeys
+  friendships Friendship[] @relation("UserFriendships") // friends this user added
+  friendsOf Friendship[] @relation("FriendOf") // friends who added this user
 }
 
 model Journey {
   id Int @id @default(autoincrement())
   title String
   startYear Int
+  visibility JourneyVisibility @default(PRIVATE) // could be public or private
+
   events Event[]?
   user JourneyUser[]
 }
@@ -35,10 +41,20 @@ model JourneyUser {
   user User @relation(fields: [userId], references: [id])
   journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
 
-   role String //  owner, collaborator, viewer
+  role JourneyRole //  owner/viewer
 
-   @@id([userId, journeyId]) // composite id
-   @@index([journeyId])
+  @@id([userId, journeyId]) // composite id
+  @@index([journeyId])
+}
+
+enum JourneyVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum JourneyRole {
+  OWNER
+  VIEWER
 }
 
 model Event {
@@ -74,4 +90,25 @@ model EventTag {
 
   @@id([eventId, tagId]) // composite PK
   @@index([tagId]) // to speed up queries
+}
+
+// mutual friendship model
+model Friendship {
+  int Int @id @default(autoincrement())
+
+  userId Int
+  friendId Int
+
+  user User @relation("UserFriendships", fields: [userId], references: [id])
+  friend User @relation("FriendOf", fields: [friendId], references: [id])
+
+  status FriendshipStatus @default(PENDING) // pending, accepted, blocked
+
+  @@unique([userId, friendId]) // no duplicate friendships
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
 }
