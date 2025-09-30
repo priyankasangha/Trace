@@ -139,37 +139,37 @@ function isUserLoggedIn(user) {
 }
 
 // validate if a user is on a journey and is allowed to add an event
-async function isUserPrimary(user, journeyId) {
-  const member = await prisma.journeyUser.findUnique({
-    where: {
-      userId_journeyId: {
-        userId: user.id,
-        journeyId: journeyId,
-      },
-    },
-  });
+// async function isUserPrimary(user, journeyId) {
+//   const member = await prisma.journeyUser.findUnique({
+//     where: {
+//       userId_journeyId: {
+//         userId: user.id,
+//         journeyId: journeyId,
+//       },
+//     },
+//   });
 
-  if (!member) {
-    throw new Error("this user doesn't exist");
-  }
-  return (member.role === JourneyRole.PRIMARY);
-}
+//   if (!member) {
+//     throw new Error("this user doesn't exist");
+//   }
+//   return (member.role === JourneyRole.PRIMARY);
+// }
 
-async function isUserCoOwner(user, journeyId) {
-  const member = await prisma.journeyUser.findUnique({
-    where: {
-      userId_journeyId: {
-        userId: user.id,
-        journeyId: journeyId,
-      },
-    },
-  });
+// async function isUserCoOwner(user, journeyId) {
+//   const member = await prisma.journeyUser.findUnique({
+//     where: {
+//       userId_journeyId: {
+//         userId: user.id,
+//         journeyId: journeyId,
+//       },
+//     },
+//   });
 
-  if (!member) {
-    throw new Error("this user doesn't exist");
-  }
-  return (member.role === JourneyRole.CO_OWNER);
-}
+//   if (!member) {
+//     throw new Error("this user doesn't exist");
+//   }
+//   return (member.role === JourneyRole.CO_OWNER);
+// }
 
 async function assertCanModifyEvents(user, journeyId) {
   const role = await getUserRole(user, journeyId);
