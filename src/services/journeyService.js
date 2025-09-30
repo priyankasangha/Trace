@@ -1,38 +1,44 @@
 import prisma from "../prisma/client.js";
-
+import { JourneyRole, JourneyVisibility } from "../prisma/client.js";
 
 export async function createJourney(data, user) {
     isUserLoggedIn(user);
+    checkFields(data);
 
     const journey = await prisma.journey.create({
         data: {
             title: data.title,
             startYear: data.startYear,
+            visibility: data.visibility ?? JourneyVisibility.PRIVATE,
             user: {
                 create: {
                     user: { connect: { id: user.id } }, // link existing user
-                    role: "owner" // assign role at creation
-                }
-            }
+                    role: JourneyRole.PRIMARY_OWNER // assign role at creation
+                },
+            },
         },
         include: {
             user: true, // include JourneyUser rows in result
-        }
+        },
     });
     
     return journey;
 }
 
+// also covers changing the journey visiblity
 export async function editJourney(data, user, journeyId) {
     isUserLoggedIn(user);
-    checkFields(data);
-    await isUserOwner(user, journeyId);
+//    checkFields(data); i may not need this because they don't have to edit all fields here
+    if (!(await isUserCoOwner(user, journeyId))|| !(await isUserPrimary(user, journeyId))) {
+        throw new Error("user is not authorized to make this change");
+    }
 
       // keeps fields that are not undefined from user (like only stuff they updated)
      const updateData = Object.fromEntries(
         Object.entries({
             title: data.title,
             startYear: data.startYear,
+            visibility: data.visibility,
         }).filter(([_, v]) => v !== undefined)
     );
 
@@ -48,7 +54,9 @@ export async function editJourney(data, user, journeyId) {
 
 export async function deleteJourney(data, user, journeyId) {
     isUserLoggedIn(user);
-    await isUserOwner(user, journeyId);
+    if (! await isUserPrimary(user, journeyId)) {
+        throw new Error("user is not authorized to make this change");
+    }
 
     await prisma.journey.delete({
         where: { 
@@ -83,23 +91,25 @@ export async function getAllJourneys(user) {
 //     await isUserViewer(user);
 // }
 
-// lets one user add another user as either an owner or viewer on a journy
-export async function shareJourney(data, user, journeyId) {
+// lets one user add another user as either an owner
+export async function addCoOwner(data, user, journeyId) {
     isUserLoggedIn(user);
-    await isUserOwner(user); // user must be an owner to do this
     await checkJourney(journeyId);
+    if (isUserPrimary(user, journeyId)) {
+        throw new Error("user is not authorized to make this change");
+    }
 
     const newUser = await getUserByEmail(data.email);
-    await isExistingMember(user);
-    const newMember = await prisma.journeyUser.create({
+    await isExistingMember(newUser, journeyId);
+    const coOwner = await prisma.journeyUser.create({
         data: {
             user: { connect: { id: newUser.id } },
             journey: { connect: { id: journeyId } },
-            role: data.role,
+            role: JourneyRole.CO_OWNER,
         },
     });
 
-    return newMember;
+    return coOwner;
 }
 
 
@@ -108,7 +118,7 @@ export async function shareJourney(data, user, journeyId) {
 // HELPERS: 
 
 // check if user is already part of this journey
-async function isExistingMember(user) {
+async function isExistingMember(userToAdd, journeyId) {
     const existingMembership = await prisma.journeyUser.findUnique({
     where: {
       userId_journeyId: {
@@ -155,8 +165,8 @@ function checkFields(data) {
     }
 }
 
-// validate if a user is an owner on the journey
-async function isUserOwner(user, journeyId) {
+// validate if a user is a primary on the journey
+async function isUserCoOwner(user, journeyId) {
     const member = await prisma.journeyUser.findUnique({
         where: {
             userId_journeyId: {
@@ -166,13 +176,11 @@ async function isUserOwner(user, journeyId) {
         },
     });
 
-    if (!member || member.role !== "owner") {
-        throw new Error("this user isn't authorized as an owner for the journey");
-    }
+   return member?.role === JourneyRole.CO_OWNER;
 }
 
-// validate if a user a viewer on the journey
-async function isUserViewer(user, journeyId) {
+// validate if a user is a coowner on the journey
+async function isUserPrimary(user, journeyId) {
     const member = await prisma.journeyUser.findUnique({
         where: {
             userId_journeyId: {
@@ -182,8 +190,7 @@ async function isUserViewer(user, journeyId) {
         },
     });
 
-    if (!member || member.role !== "viewer") {
-        throw new Error("this user isn't authorized as an owner for the journey");
-    }
+   return member?.role === JourneyRole.PRIMARY_OWNER;
 }
+
 

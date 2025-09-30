@@ -53,7 +53,8 @@ enum JourneyVisibility {
 }
 
 enum JourneyRole {
-  OWNER
+  PRIMARY_OWNER
+  CO_OWNER
   VIEWER
 }
 
