@@ -9,7 +9,7 @@ export async function createEvent(data, user, journeyId) {
   isUserLoggedIn(user);
   checkFields(data, user);
   await checkJourney(journeyId);
-  await isUserValid(user, journeyId);
+  await assertCanModifyEvents(user, journeyId);
 
   const event = await prisma.event.create({
     data: {
@@ -34,7 +34,7 @@ export async function editEvent(data, user, journeyId, eventId) {
   isUserLoggedIn(user);
   await checkJourney(journeyId);
   await doesEventExistInJourney(eventId, journeyId);
-  await isUserValid(user, journeyId);
+  await assertCanModifyEvents(user, journeyId);
 
   // keeps fields that are not undefined from user (like only stuff they updated)
   const updateData = Object.fromEntries(
@@ -64,7 +64,7 @@ export async function getEvent(user, journeyId, eventId) {
   isUserLoggedIn(user);
   await checkJourney(journeyId);
   await doesEventExistInJourney(eventId, journeyId);
-  await isUserValid(user, journeyId);
+  await assertCanModifyEvents(user, journeyId);
 
   const event = await prisma.event.findFirst({
     where: {
@@ -83,7 +83,7 @@ export async function deleteEvent(data, user, journeyId, eventId) {
   isUserLoggedIn(user);
   await checkJourney(journeyId);
   await doesEventExistInJourney(eventId, journeyId);
-  await isUserValid(user, journeyId);
+  await assertCanModifyEvents(user, journeyId);
 
   await prisma.event.delete({
     where: {
@@ -139,7 +139,7 @@ function isUserLoggedIn(user) {
 }
 
 // validate if a user is on a journey and is allowed to add an event
-async function isUserValid(user, journeyId) {
+async function isUserPrimary(user, journeyId) {
   const member = await prisma.journeyUser.findUnique({
     where: {
       userId_journeyId: {
@@ -149,7 +149,32 @@ async function isUserValid(user, journeyId) {
     },
   });
 
-  if (!member || member.role == JourneyRole.VIEWER) {
-    throw new Error("this user isn't authorized to change the events");
+  if (!member) {
+    throw new Error("this user doesn't exist");
+  }
+  return (member.role === JourneyRole.PRIMARY);
+}
+
+async function isUserCoOwner(user, journeyId) {
+  const member = await prisma.journeyUser.findUnique({
+    where: {
+      userId_journeyId: {
+        userId: user.id,
+        journeyId: journeyId,
+      },
+    },
+  });
+
+  if (!member) {
+    throw new Error("this user doesn't exist");
+  }
+  return (member.role === JourneyRole.CO_OWNER);
+}
+
+async function assertCanModifyEvents(user, journeyId) {
+  const role = await getUserRole(user, journeyId);
+  if (![JourneyRole.PRIMARY, JourneyRole.CO_OWNER].includes(role)) {
+    throw new Error("user is not authorized to modify events");
   }
 }
+

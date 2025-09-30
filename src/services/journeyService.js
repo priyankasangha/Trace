@@ -29,8 +29,8 @@ export async function createJourney(data, user) {
 export async function editJourney(data, user, journeyId) {
     isUserLoggedIn(user);
 //    checkFields(data); i may not need this because they don't have to edit all fields here
-    if (!(await isUserCoOwner(user, journeyId))|| !(await isUserPrimary(user, journeyId))) {
-        throw new Error("user is not authorized to make this change");
+    if (!(await isUserPrimary(user, journeyId) || await isUserCoOwner(user, journeyId))) {
+        throw new Error("user is not authorized to create an event");
     }
 
       // keeps fields that are not undefined from user (like only stuff they updated)
