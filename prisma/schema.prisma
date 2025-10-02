@@ -22,6 +22,7 @@ model User {
   journeys JourneyUser[] // one user can be the journey user in many journeys
   friendships Friendship[] @relation("UserFriendships") // friends this user added
   friendsOf Friendship[] @relation("FriendOf") // friends who added this user
+  favourites Journey[]
 }
 
 model Journey {
@@ -32,6 +33,8 @@ model Journey {
 
   events Event[]?
   user JourneyUser[]
+
+  favouritedBy User[] @relation("UserFavourites")
 }
 
 model JourneyUser {
@@ -69,6 +72,8 @@ model Event {
   city String?
   place String?
   imageUrls String[]?
+  hiddenFromMe Boolean @default(false)
+  hiddenFromOthers Boolean @default(false)
 
   journey Journey @relation(fields: [journeyId], references: [id])
   journeyId Int

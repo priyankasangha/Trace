@@ -48,6 +48,8 @@ export async function editEvent(data, user, journeyId, eventId) {
       city: data.city,
       place: data.place,
       imageUrls: null,
+      hiddenFromMe: data.hiddenFromMe,
+      hiddenFromOthers: data.hiddenFromOthers,
     }).filter(([_, v]) => v !== undefined)
   );
 
@@ -79,7 +81,21 @@ export async function getEvent(user, journeyId, eventId) {
   return event;
 }
 
-export async function deleteEvent(data, user, journeyId, eventId) {
+// gets all events in journey
+// if they're coowner or primary owner get all events except hiddenfromme
+// if they're a viewer, get all events except hiddenfromothers
+export async function getAllJourneyEvents(user, journeyId) {
+  isUserLoggedIn(user);
+  await checkJourney(journeyId);
+  const role = await getUserRole(user, journeyId);
+  if (role == JourneyRole.VIEWER) {
+    return getAllEventsForViewer(journeyId);
+  }
+  return getAllEventsForPrimaryAndCoOwner(journeyId);
+}
+
+
+export async function deleteEvent(user, journeyId, eventId) {
   isUserLoggedIn(user);
   await checkJourney(journeyId);
   await doesEventExistInJourney(eventId, journeyId);
@@ -95,6 +111,39 @@ export async function deleteEvent(data, user, journeyId, eventId) {
 // ADD FUNCTION THAT GETS ALL EVENTS FOR A JOURNEY
 
 // HELPERS:
+
+// gets events for primary/coowners:
+async function getAllEventsForPrimaryAndCoOwner(journeyId) {
+  const events = await prisma.event.findMany({
+    where: { 
+      journeyId: journeyId,
+      hiddenFromMe: false, 
+    },
+    orderBy: [
+      { year: "asc" },
+      { month: "asc" },
+      { day: "asc" },
+    ],
+  });
+  return events;
+}
+
+async function getAllEventsForViewer(journeyId) {
+  const events = await prisma.event.findMany({
+    where: { 
+      journeyId: journeyId,
+      hiddenFromOthers: false, 
+    },
+    orderBy: [
+      { year: "asc" },
+      { month: "asc" },
+      { day: "asc" },
+    ],
+  });
+  return events;
+}
+
+
 
 // throws error if event doesn't exist
 async function doesEventExistInJourney(eventId, journeyId) {
@@ -173,8 +222,26 @@ function isUserLoggedIn(user) {
 
 async function assertCanModifyEvents(user, journeyId) {
   const role = await getUserRole(user, journeyId);
-  if (![JourneyRole.PRIMARY, JourneyRole.CO_OWNER].includes(role)) {
+  if (![JourneyRole.PRIMARY_OWNER, JourneyRole.CO_OWNER].includes(role)) {
     throw new Error("user is not authorized to modify events");
   }
+}
+
+async function getUserRole(user, journeyId) {
+  const membership = await prisma.journeyUser.findUnique({
+    where: {
+      userId_journeyId: {
+        userId: user.id,
+        journeyId: journeyId,
+      },
+    },
+    select: { role: true },
+  });
+
+  if (!membership) {
+    throw new Error("User is not part of this journey");
+  }
+
+  return membership.role;
 }
 
