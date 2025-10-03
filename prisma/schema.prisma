@@ -22,7 +22,7 @@ model User {
   journeys JourneyUser[] // one user can be the journey user in many journeys
   friendships Friendship[] @relation("UserFriendships") // friends this user added
   friendsOf Friendship[] @relation("FriendOf") // friends who added this user
-  favourites Journey[]
+  favourites Journey[] @relation("UserFavourites")
 }
 
 model Journey {
@@ -31,7 +31,7 @@ model Journey {
   startYear Int
   visibility JourneyVisibility @default(PRIVATE) // could be public or private
 
-  events Event[]?
+  events Event[]
   user JourneyUser[]
 
   favouritedBy User[] @relation("UserFavourites")
@@ -71,13 +71,15 @@ model Event {
   country String?
   city String?
   place String?
-  imageUrls String[]?
+  imageUrls String[]
   hiddenFromMe Boolean @default(false)
   hiddenFromOthers Boolean @default(false)
+  anniversaryEnabled Boolean @default(false)
+  reminderEnabled Boolean @default(false)
 
   journey Journey @relation(fields: [journeyId], references: [id])
   journeyId Int
-  tags EventTag[]?
+  tags EventTag[]
 }
 
 model Tag {
@@ -100,7 +102,7 @@ model EventTag {
 
 // mutual friendship model
 model Friendship {
-  int Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   userId Int
   friendId Int

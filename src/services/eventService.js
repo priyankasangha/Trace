@@ -50,6 +50,8 @@ export async function editEvent(data, user, journeyId, eventId) {
       imageUrls: null,
       hiddenFromMe: data.hiddenFromMe,
       hiddenFromOthers: data.hiddenFromOthers,
+      anniversaryEnabled: data.anniversaryEnabled,
+      reminderEnabled: data.reminderEnabled,
     }).filter(([_, v]) => v !== undefined)
   );
 
