@@ -19,7 +19,7 @@ model User {
   email String @unique
   profilePic String? // url profile pic
 
-  journeys JourneyUser[] // one user can be the journey user in many journeys
+  journeys Participant[] // one user can be the journey user in many journeys
   friendships Friendship[] @relation("UserFriendships") // friends this user added
   friendsOf Friendship[] @relation("FriendOf") // friends who added this user
   favourites Journey[] @relation("UserFavourites")
@@ -32,12 +32,12 @@ model Journey {
   visibility JourneyVisibility @default(PRIVATE) // could be public or private
 
   events Event[]
-  user JourneyUser[]
+  participants Participant[]
 
   favouritedBy User[] @relation("UserFavourites")
 }
 
-model JourneyUser {
+model Participant {
   userId Int
   journeyId Int
   
@@ -110,8 +110,9 @@ model Friendship {
   user User @relation("UserFriendships", fields: [userId], references: [id])
   friend User @relation("FriendOf", fields: [friendId], references: [id])
 
-  status FriendshipStatus @default(PENDING) // pending, accepted, blocked
+  status FriendshipStatus @default(NONE) // pending, accepted, blocked, NONE
 
+  @@index([friendId, status]) // composite for make status easy to lookup
   @@unique([userId, friendId]) // no duplicate friendships
 }
 
@@ -119,4 +120,5 @@ enum FriendshipStatus {
   PENDING
   ACCEPTED
   BLOCKED
+  NONE
 }
