@@ -1,5 +1,14 @@
 import prisma from "../prisma/client.js";
 import { JourneyRole, JourneyVisibility } from "../prisma/client.js";
+import { 
+    isUserLoggedIn,
+    isExistingMember,
+    isUserPrimary,
+    isUserCoOwner,
+    checkJourneyFields,
+    getUserByEmail,
+    getUserById,
+} from "../permissionsHelpers.js";
 
 export async function createJourney(data, user) {
     isUserLoggedIn(user);
