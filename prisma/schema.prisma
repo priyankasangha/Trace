@@ -30,7 +30,7 @@ model Journey {
   title String
   startYear Int
   visibility JourneyVisibility @default(PRIVATE) // could be public or private
-
+  coverPage String?
   events Event[]
   participants Participant[]
 

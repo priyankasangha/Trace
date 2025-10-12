@@ -10,7 +10,7 @@ export async function handleGoogleLogin(googleProfile) {
         user = await createUser({
             email,
             name,
-            profilePic: picture,
+            profilePic: null,
         });
     }
 
