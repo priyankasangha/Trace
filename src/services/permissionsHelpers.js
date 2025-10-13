@@ -4,7 +4,10 @@ import { JourneyRole } from "../prisma/client.js";
 
 
 export function isUserLoggedIn(user) {
-  if (!user) throw new Error("User must be logged in");
+  if (!user) {
+    throw new Error("User must be logged in");
+  }
+  return;
 }
 
 export async function doesUserExist(userId) {

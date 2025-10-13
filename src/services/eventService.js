@@ -23,7 +23,6 @@ export async function createEvent(data, user, journeyId) {
       place: data.place,
       imageUrls: null,
       journey: { connect: { id: journeyId } },
-      tags: null,
     },
   });
 

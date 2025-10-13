@@ -18,6 +18,8 @@ model User {
   name String
   email String @unique
   profilePic String? // url profile pic
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updateAt
 
   journeys Participant[] // one user can be the journey user in many journeys
   friendships Friendship[] @relation("UserFriendships") // friends this user added
@@ -33,6 +35,9 @@ model Journey {
   coverPage String?
   events Event[]
   participants Participant[]
+  completed Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updateAt
 
   favouritedBy User[] @relation("UserFavourites")
 }
@@ -40,11 +45,10 @@ model Journey {
 model Participant {
   userId Int
   journeyId Int
+  role JourneyRole
   
   user User @relation(fields: [userId], references: [id])
   journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
-
-  role JourneyRole //  owner/viewer
 
   @@id([userId, journeyId]) // composite id
   @@index([journeyId])
@@ -71,34 +75,19 @@ model Event {
   country String?
   city String?
   place String?
-  imageUrls String[]
+  coverImage String?
+  albumImages String[]
   hiddenFromMe Boolean @default(false)
   hiddenFromOthers Boolean @default(false)
   anniversaryEnabled Boolean @default(false)
   reminderEnabled Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updateAt
 
   journey Journey @relation(fields: [journeyId], references: [id])
   journeyId Int
-  tags EventTag[]
 }
 
-model Tag {
-  id Int @id @default(autoincrement())
-  name String @unique
-  events EventTag[]
-}
-
-model EventTag {
-  eventId Int
-  tagId Int
-
-  event Event @relation(fields: [eventId], references: [id])
-  tag   Tag   @relation(fields: [tagId], references: [id])
-
-
-  @@id([eventId, tagId]) // composite PK
-  @@index([tagId]) // to speed up queries
-}
 
 // mutual friendship model
 model Friendship {
