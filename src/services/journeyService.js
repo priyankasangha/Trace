@@ -126,43 +126,6 @@ export async function addCoOwner(data, user, journeyId) {
 
 // HELPERS: 
 
-// check if user is already part of this journey
-async function isExistingMember(userToAdd, journeyId) {
-    const existingMembership = await prisma.journeyUser.findUnique({
-    where: {
-      userId_journeyId: {
-        userId: userToAdd.id,
-        journeyId: journeyId,
-      },
-    },
-  });
-
-  if (existingMembership) {
-    throw new Error("User is already part of this journey");
-  }
-}
-
-// find users by email
-async function getUserByEmail(email) {
-    const user = await prisma.user.findUnique({
-        where: { email: email },
-    });
-
-    if (!user) {
-        throw new Error("No user found with that email");
-    }
-
-    return user;
-
-}
-
-// check if user is logged in so they can create a journey
-function isUserLoggedIn(user) {
-    if (!user) {
-        throw new Error("user must be logged in");
-    }
-}
-
 // check if fields are correct to make journey
 //throws error if field is wrong to create journey
 function checkFields(data) {
@@ -174,32 +137,7 @@ function checkFields(data) {
     }
 }
 
-// validate if a user is a primary on the journey
-async function isUserCoOwner(user, journeyId) {
-    const member = await prisma.journeyUser.findUnique({
-        where: {
-            userId_journeyId: {
-                userId: user.id,
-                journeyId: journeyId
-            },
-        },
-    });
 
-   return member?.role === JourneyRole.CO_OWNER;
-}
 
-// validate if a user is a coowner on the journey
-async function isUserPrimary(user, journeyId) {
-    const member = await prisma.journeyUser.findUnique({
-        where: {
-            userId_journeyId: {
-                userId: user.id,
-                journeyId: journeyId
-            },
-        },
-    });
-
-   return member?.role === JourneyRole.PRIMARY_OWNER;
-}
 
 

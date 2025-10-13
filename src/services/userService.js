@@ -59,32 +59,55 @@ export async function updateUser(userId, data) {
   });
 }
 
-// export async function getFavoriteJourneys(userId, )
-
-
-
-export async function getUserByEmail(email) {
+export async function getFavouriteJourneys(userId) {
+    await doesUserExist(userId);
     const user = await prisma.user.findUnique({
-        where: { email },
-    });
-
-    if (!user) {
-        throw new Error("no user found");
-    }
-    return user;
-}
-
-export async function getUserById(id) {
-    const user = await prisma.user.findUnique({
-        where: { id },
-        include: { journeys: true, friendships: true, friendsOf: true },
+        where: { id: userId },
+        include: {
+            favourites: {
+                include: {
+                    participants: true,
+                    events: true,
+                },
+                orderBy: { startYear: "desc" },
+            },
+        },
     });
     
-    if (!user) {
-        throw new Error("no user found");
-    }
+    return user.favourites;
+}
 
-    return user;
+
+export async function getUserJourneysByRole(userId, roleFilter = "all", { skip = 0, take = 10 } = {}) {
+  await doesUserExist(userId);
+  let roleCondition = undefined;
+
+  if (roleFilter === "mine") {
+    roleCondition = { role: { in: ["PRIMARY_OWNER", "CO_OWNER"] } };
+  } else if (roleFilter === "all") {
+    roleCondition = { role: { in: ["PRIMARY_OWNER", "CO_OWNER", "VIEWER"] } };
+  } else if (roleFilter === "friends") {
+    roleCondition = { role: { in: ["VIEWER"] } };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      journeys: {
+        where: roleCondition,
+        include: {
+          participants: true,
+          events: true,
+          favouritedBy: { where: { id: userId } },
+        },
+        skip,
+        take,
+        orderBy: { startYear: "desc" },
+      },
+    },
+  });
+
+  return user.journeys;
 }
 
 

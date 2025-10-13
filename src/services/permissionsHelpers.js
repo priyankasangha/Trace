@@ -50,7 +50,24 @@ export function checkJourneyFields(data) {
 
 // fetch user by email
 export async function getUserByEmail(email) {
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new Error("No user found with that email");
+const user = await prisma.user.findUnique({
+    where: { email } 
+});
+if (!user) {
+    throw new Error("No user found with that email");
+}
   return user;
+}
+
+export async function getUserById(id) {
+    const user = await prisma.user.findUnique({
+        where: { id },
+        include: { journeys: true, friendships: true, friendsOf: true },
+    });
+    
+    if (!user) {
+        throw new Error("no user found");
+    }
+
+    return user;
 }
