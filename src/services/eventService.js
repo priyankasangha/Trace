@@ -3,11 +3,12 @@ import { JourneyRole } from '@prisma/client';
 import * as JourneyPerms from "../helpers/journeyPermissionsHelper.js";
 import * as EventPerms from "../helpers/eventPermissionsHelper.js";
 import * as RoleUtils from "../utils/roleUtils";
+import * as EventValidation from  '../helpers/serviceHelpers/eventServiceHelpers/eventValidationHelpers.js';
 
 // TODO: MAKE SURE WE DON'T RETURN THE WHOLE EVENT, BUT JUST THE FIELDS WE WANT
 // TODO: REFACTOR VISIBILITY HELPERS INTO SEPERATE CLASS
-// TODO: HELPERS TO CHECK FIELDS WHEN MAKING EVENTS
-// TODO: HELPER TO MAKE SURE USER IS LOGGED IN/IN DATQABASE
+
+
 
 // Viewing Modes for Events
 export const VIEW_MODES = {
@@ -19,6 +20,9 @@ export const VIEW_MODES = {
 
 export async function createEvent(data, userId, journeyId) {
   await EventPerms.ensureUserCanAddEvent(userId, journeyId);
+
+  //TODO: validate data here
+  data = EventValidation.validateCreateEventData(data);
 
   const event = await prisma.event.create({
     data: {
@@ -41,6 +45,8 @@ export async function createEvent(data, userId, journeyId) {
 
 export async function editEvent(data, userId, journeyId, eventId) {
   await EventPerms.ensureUserCanEditEvent(userId, journeyId);
+
+  data = EventValidation.validateEditEventData(data);
 
   // keeps fields that are not undefined from user (like only stuff they updated)
   const updateData = Object.fromEntries(
