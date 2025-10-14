@@ -6,7 +6,7 @@ import * as RoleUtils from "../utils/roleUtils";
 import * as EventValidation from  '../helpers/serviceHelpers/eventServiceHelpers/eventValidationHelpers.js';
 
 // TODO: MAKE SURE WE DON'T RETURN THE WHOLE EVENT, BUT JUST THE FIELDS WE WANT
-// TODO: REFACTOR VISIBILITY HELPERS INTO SEPERATE CLASS
+
 
 
 
@@ -20,8 +20,6 @@ export const VIEW_MODES = {
 
 export async function createEvent(data, userId, journeyId) {
   await EventPerms.ensureUserCanAddEvent(userId, journeyId);
-
-  //TODO: validate data here
   data = EventValidation.validateCreateEventData(data);
 
   const event = await prisma.event.create({
@@ -45,7 +43,6 @@ export async function createEvent(data, userId, journeyId) {
 
 export async function editEvent(data, userId, journeyId, eventId) {
   await EventPerms.ensureUserCanEditEvent(userId, journeyId);
-
   data = EventValidation.validateEditEventData(data);
 
   // keeps fields that are not undefined from user (like only stuff they updated)
@@ -103,27 +100,13 @@ export async function editEvent(data, userId, journeyId, eventId) {
 
   const visibleEvents = [];
   for (const event of events) {
-    if (await canUserSeeEvent(userId, journeyId, event, options)) {
+    if (await EventPerms.canUserSeeEvent(userId, journeyId, event, options)) {
       visibleEvents.push(event);
     }
   }
 
   return visibleEvents;
  }
-
-export async function canUserSeeEvent(userId, journeyId, event, options = {}) {
-  const isOwner = await JourneyPerms.isCoOwnerOrPrimaryJourneyOwner(userId, journeyId);
-  const viewMode = options.viewMode ?? 'VISIBLE_EVENTS';
-
-  if (isOwner) {
-    if (viewMode === 'VISIBLE_EVENTS') {
-      return !event.hiddenFromMe;
-    } 
-    return true; // Owner + secret mode shows everything
-  } else {
-    return !event.hiddenFromOthers; // Viewer sees only public events
-  }
-}
 
 
 // function that returns event details for events users can view
@@ -142,7 +125,7 @@ export async function getEventById(userId, journeyId, eventId, options = {}) {
   }
 
   // check if user can see this specific event
-  const canView = await canUserSeeEvent(userId, journeyId, event, options);
+  const canView = await EventPerms.canUserSeeEvent(userId, journeyId, event, options);
   if (!canView) {
     throw new Error("You do not have permission to view this event");
   }

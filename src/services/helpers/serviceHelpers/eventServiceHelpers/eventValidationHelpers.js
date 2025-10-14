@@ -29,7 +29,7 @@ export function validateEventData(data) {
     validateStringField(data.description, 'Description');
     validateStringField(data.place, 'Place');
     validateStringField(data.coverImage, 'coverImage');
-    validateStringField(data.albumImages, 'albumImages');
+    validateStringArrayField(data.albumImages, 'albumImages');
     validateNumberField(data.month, 'Month');
     validateNumberField(data.day, 'Day');
     validateBooleanField(data.hiddenFromMe, 'hiddenFromMe');
@@ -59,6 +59,12 @@ function validateNumberField(fieldValue, fieldName) {
 
 function validateBooleanField(fieldValue, fieldName) {
     if (typeof fieldValue !== 'boolean' && typeof fieldValue !== 'undefined') {
+        throwDataTypeError(fieldName);
+    }
+}
+
+function validateStringArrayField(fieldValue, fieldName) {
+    if (!Array.isArray(fieldValue) && typeof fieldValue !== 'undefined') {
         throwDataTypeError(fieldName);
     }
 }
