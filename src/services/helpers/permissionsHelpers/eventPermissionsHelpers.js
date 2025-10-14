@@ -20,7 +20,8 @@ export async function ensureUserCanDeleteEvent(userId, journeyId) {
 }
 
 // can edit if you're primary or cowowner
-export async function ensureUserCanEdit(userId, journeyId) {
+export async function ensureUserCanEditEvent(userId, journeyId) {
   const role = await isCoOwnerOrPrimaryJourneyOwner(userId, journeyId);
   throwPermissionError(role, 'User cannot edit events in this journey');
 }
+

@@ -30,11 +30,12 @@ model User {
 model Journey {
   id Int @id @default(autoincrement())
   title String
-  startYear Int
+  description String?
   visibility JourneyVisibility @default(PRIVATE) // could be public or private
   coverPage String?
   events Event[]
   participants Participant[]
+  anniversaryEnabled Boolean @default(false)
   completed Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updateAt

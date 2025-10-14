@@ -1,15 +1,24 @@
 import prisma from '../prisma/client.js';
 import { JourneyRole } from '@prisma/client';
+import * as JourneyPerms from "../helpers/journeyPermissionsHelper.js";
+import * as EventPerms from "../helpers/eventPermissionsHelper.js";
+import * as RoleUtils from "../utils/roleUtils";
 
-/*
-create new event in the database
-@param {Object} data: from the frontend
-*/
-export async function createEvent(data, user, journeyId) {
-  isUserLoggedIn(user);
-  checkFields(data, user);
-  await checkJourney(journeyId);
-  await assertCanModifyEvents(user, journeyId);
+// TODO: MAKE SURE WE DON'T RETURN THE WHOLE EVENT, BUT JUST THE FIELDS WE WANT
+// TODO: REFACTOR VISIBILITY HELPERS INTO SEPERATE CLASS
+// TODO: HELPERS TO CHECK FIELDS WHEN MAKING EVENTS
+// TODO: HELPER TO MAKE SURE USER IS LOGGED IN/IN DATQABASE
+
+// Viewing Modes for Events
+export const VIEW_MODES = {
+  ALL_EVENTS: "ALL_EVENTS",
+  VISIBLE_EVENTS: "VISIBLE_EVENTS"
+};
+
+// EVENT CRUD FUNCTIONS
+
+export async function createEvent(data, userId, journeyId) {
+  await EventPerms.ensureUserCanAddEvent(userId, journeyId);
 
   const event = await prisma.event.create({
     data: {
@@ -21,7 +30,8 @@ export async function createEvent(data, user, journeyId) {
       country: data.country,
       city: data.city,
       place: data.place,
-      imageUrls: null,
+      coverImage: data.coverImage,
+      albumImages: data.albumImages, 
       journey: { connect: { id: journeyId } },
     },
   });
@@ -29,11 +39,8 @@ export async function createEvent(data, user, journeyId) {
   return event;
 }
 
-export async function editEvent(data, user, journeyId, eventId) {
-  isUserLoggedIn(user);
-  await checkJourney(journeyId);
-  await doesEventExistInJourney(eventId, journeyId);
-  await assertCanModifyEvents(user, journeyId);
+export async function editEvent(data, userId, journeyId, eventId) {
+  await EventPerms.ensureUserCanEditEvent(userId, journeyId);
 
   // keeps fields that are not undefined from user (like only stuff they updated)
   const updateData = Object.fromEntries(
@@ -46,7 +53,8 @@ export async function editEvent(data, user, journeyId, eventId) {
       country: data.country,
       city: data.city,
       place: data.place,
-      imageUrls: null,
+      coverImage: data.coverImage,
+      albumImages: data.albumImages,
       hiddenFromMe: data.hiddenFromMe,
       hiddenFromOthers: data.hiddenFromOthers,
       anniversaryEnabled: data.anniversaryEnabled,
@@ -63,141 +71,90 @@ export async function editEvent(data, user, journeyId, eventId) {
   return updatedEvent;
 }
 
-export async function getEvent(user, journeyId, eventId) {
-  isUserLoggedIn(user);
-  await checkJourney(journeyId);
-  await doesEventExistInJourney(eventId, journeyId);
-  await assertCanModifyEvents(user, journeyId);
-
-  const event = await prisma.event.findFirst({
-    where: {
-      id: eventId,
-      journeyId: journeyId,
-    },
-    include: {
-      journey: { include: { users: true } },
-      tags: true,
-    },
-  });
-  return event;
-}
-
-// gets all events in journey
-// if they're coowner or primary owner get all events except hiddenfromme
-// if they're a viewer, get all events except hiddenfromothers
-export async function getAllJourneyEvents(user, journeyId) {
-  isUserLoggedIn(user);
-  await checkJourney(journeyId);
-  const role = await getUserRole(user, journeyId);
-  if (role == JourneyRole.VIEWER) {
-    return getAllEventsForViewer(journeyId);
-  }
-  return getAllEventsForPrimaryAndCoOwner(journeyId);
-}
-
-export async function deleteEvent(user, journeyId, eventId) {
-  isUserLoggedIn(user);
-  await checkJourney(journeyId);
-  await doesEventExistInJourney(eventId, journeyId);
-  await assertCanModifyEvents(user, journeyId);
+ export async function deleteEvent(userId, journeyId, eventId) {
+  await EventPerms.ensureUserCanDeleteEvent(userId, journeyId);
 
   await prisma.event.delete({
-    where: {
-      id: eventId,
-    },
+    where: { id: eventId },
   });
-}
+ }
 
-// ADD FUNCTION THAT GETS ALL EVENTS FOR A JOURNEY
 
-// HELPERS:
+ // EVENT VIEWING FUNCTIONS 
 
-// gets events for primary/coowners:
-async function getAllEventsForPrimaryAndCoOwner(journeyId) {
+ // this differs based on the users view/permissions
+ export async function getAllJourneyEvents(userId, journeyId, options = {}) {
+  await JourneyPerms.ensureUserCanViewJourney(userId, journeyId);
+
   const events = await prisma.event.findMany({
-    where: {
-      journeyId: journeyId,
-      hiddenFromMe: false,
-    },
-    orderBy: [{ year: 'asc' }, { month: 'asc' }, { day: 'asc' }],
+    where: { journeyId },
+    orderBy: [ 
+      { year: 'asc' },
+      { month: 'asc' },
+      { day: 'asc' }
+    ],
   });
-  return events;
+
+  const visibleEvents = [];
+  for (const event of events) {
+    if (await canUserSeeEvent(userId, journeyId, event, options)) {
+      visibleEvents.push(event);
+    }
+  }
+
+  return visibleEvents;
+ }
+
+export async function canUserSeeEvent(userId, journeyId, event, options = {}) {
+  const isOwner = await JourneyPerms.isCoOwnerOrPrimaryJourneyOwner(userId, journeyId);
+  const viewMode = options.viewMode ?? 'VISIBLE_EVENTS';
+
+  if (isOwner) {
+    if (viewMode === 'VISIBLE_EVENTS') {
+      return !event.hiddenFromMe;
+    } 
+    return true; // Owner + secret mode shows everything
+  } else {
+    return !event.hiddenFromOthers; // Viewer sees only public events
+  }
 }
 
-async function getAllEventsForViewer(journeyId) {
-  const events = await prisma.event.findMany({
-    where: {
-      journeyId: journeyId,
-      hiddenFromOthers: false,
-    },
-    orderBy: [{ year: 'asc' }, { month: 'asc' }, { day: 'asc' }],
-  });
-  return events;
-}
 
-// throws error if event doesn't exist
-async function doesEventExistInJourney(eventId, journeyId) {
-  const event = await prisma.event.findFirst({
-    where: {
-      id: eventId,
-      journeyId: journeyId,
+// function that returns event details for events users can view
+export async function getEventById(userId, journeyId, eventId, options = {}) {
+  await JourneyPerms.ensureUserCanViewJourney(userId, journeyId);
+
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    include: {
+      journey: { include: { participants: true } },
     },
-    include: { journey: { include: { users: true } } },
   });
 
   if (!event) {
-    throw new Error('event does not exist');
+    throw new Error("Event not found");
+  }
+
+  // check if user can see this specific event
+  const canView = await canUserSeeEvent(userId, journeyId, event, options);
+  if (!canView) {
+    throw new Error("You do not have permission to view this event");
+  }
+
+  return event;
+}
+
+// just a general function to get any event by Id, no filters involved
+export async function getAnyEventById(eventId) {
+  const event = await prisma.event.findUnique({
+    where: {
+      id: eventId,
+    },
+  });
+
+  if (!event) {
+    throw new Error("Event not found");
   }
   return event;
 }
 
-//throws error if field is wrong to create event
-function checkFields(data, user) {
-  if (!data.title) {
-    throw new Error('your event needs a title');
-  }
-  if (!data.year) {
-    throw new Error('your event needs a year');
-  }
-}
-
-async function checkJourney(journeyId) {
-  const journey = await prisma.journey.findUnique({
-    where: { id: journeyId },
-  });
-
-  if (!journey) {
-    throw new Error("this journey doesn't exist");
-  }
-}
-
-function isUserLoggedIn(user) {
-  if (!user) {
-    throw new Error('user must be logged in');
-  }
-}
-
-async function assertCanModifyEvents(user, journeyId) {
-  const role = await getUserRole(user, journeyId);
-  if (![JourneyRole.PRIMARY_OWNER, JourneyRole.CO_OWNER].includes(role)) {
-    throw new Error('user is not authorized to modify events');
-  }
-}
-
-async function getUserRole(user, journeyId) {
-  const membership = await prisma.journeyUser.findUnique({
-    where: {
-      userId_journeyId: {
-        userId: user.id,
-        journeyId: journeyId,
-      },
-    },
-    select: { role: true },
-  });
-
-  if (!membership) {
-    throw new Error('User is not part of this journey');
-  }
-
-  return membership.role;
-}

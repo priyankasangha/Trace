@@ -18,7 +18,7 @@ export async function isJourneyViewer(userId, journeyId) {
   return role === JourneyRole.VIEWER;
 }
 
-async function getUserRoleOnJourney(userId, journeyId) {
+export async function getUserRoleOnJourney(userId, journeyId) {
   const participant = await prisma.participant.findUnique({
     where: {
       userId_journeyId: {
