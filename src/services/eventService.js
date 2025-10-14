@@ -95,7 +95,6 @@ export async function getAllJourneyEvents(user, journeyId) {
   return getAllEventsForPrimaryAndCoOwner(journeyId);
 }
 
-
 export async function deleteEvent(user, journeyId, eventId) {
   isUserLoggedIn(user);
   await checkJourney(journeyId);
@@ -116,35 +115,25 @@ export async function deleteEvent(user, journeyId, eventId) {
 // gets events for primary/coowners:
 async function getAllEventsForPrimaryAndCoOwner(journeyId) {
   const events = await prisma.event.findMany({
-    where: { 
+    where: {
       journeyId: journeyId,
-      hiddenFromMe: false, 
+      hiddenFromMe: false,
     },
-    orderBy: [
-      { year: "asc" },
-      { month: "asc" },
-      { day: "asc" },
-    ],
+    orderBy: [{ year: 'asc' }, { month: 'asc' }, { day: 'asc' }],
   });
   return events;
 }
 
 async function getAllEventsForViewer(journeyId) {
   const events = await prisma.event.findMany({
-    where: { 
+    where: {
       journeyId: journeyId,
-      hiddenFromOthers: false, 
+      hiddenFromOthers: false,
     },
-    orderBy: [
-      { year: "asc" },
-      { month: "asc" },
-      { day: "asc" },
-    ],
+    orderBy: [{ year: 'asc' }, { month: 'asc' }, { day: 'asc' }],
   });
   return events;
 }
-
-
 
 // throws error if event doesn't exist
 async function doesEventExistInJourney(eventId, journeyId) {
@@ -191,7 +180,7 @@ function isUserLoggedIn(user) {
 async function assertCanModifyEvents(user, journeyId) {
   const role = await getUserRole(user, journeyId);
   if (![JourneyRole.PRIMARY_OWNER, JourneyRole.CO_OWNER].includes(role)) {
-    throw new Error("user is not authorized to modify events");
+    throw new Error('user is not authorized to modify events');
   }
 }
 
@@ -207,9 +196,8 @@ async function getUserRole(user, journeyId) {
   });
 
   if (!membership) {
-    throw new Error("User is not part of this journey");
+    throw new Error('User is not part of this journey');
   }
 
   return membership.role;
 }
-

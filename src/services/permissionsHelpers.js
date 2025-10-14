@@ -1,22 +1,21 @@
 // authHelpers.js
-import prisma from "../prisma/client.js";
-import { JourneyRole } from "../prisma/client.js";
-
+import prisma from '../prisma/client.js';
+import { JourneyRole } from '../prisma/client.js';
 
 export function isUserLoggedIn(user) {
   if (!user) {
-    throw new Error("User must be logged in");
+    throw new Error('User must be logged in');
   }
   return;
 }
 
 export async function doesUserExist(userId) {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-    });
-    if (!user) {
-        throw new Error("user does not exist");
-    }
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+  if (!user) {
+    throw new Error('user does not exist');
+  }
 }
 
 // check if user is part of journey
@@ -25,7 +24,7 @@ export async function isExistingMember(userId, journeyId) {
     where: { userId_journeyId: { userId, journeyId } },
   });
   if (existingMembership) {
-    throw new Error("User is already part of this journey");
+    throw new Error('User is already part of this journey');
   }
 }
 
@@ -47,30 +46,30 @@ export async function isUserCoOwner(userId, journeyId) {
 
 // simple field checker for journeys
 export function checkJourneyFields(data) {
-  if (!data.title) throw new Error("Your journey needs a title");
-  if (!data.startYear) throw new Error("Your journey needs a start year");
+  if (!data.title) throw new Error('Your journey needs a title');
+  if (!data.startYear) throw new Error('Your journey needs a start year');
 }
 
 // fetch user by email
 export async function getUserByEmail(email) {
-const user = await prisma.user.findUnique({
-    where: { email } 
-});
-if (!user) {
-    throw new Error("No user found with that email");
-}
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+  if (!user) {
+    throw new Error('No user found with that email');
+  }
   return user;
 }
 
 export async function getUserById(id) {
-    const user = await prisma.user.findUnique({
-        where: { id },
-        include: { journeys: true, friendships: true, friendsOf: true },
-    });
-    
-    if (!user) {
-        throw new Error("no user found");
-    }
+  const user = await prisma.user.findUnique({
+    where: { id },
+    include: { journeys: true, friendships: true, friendsOf: true },
+  });
 
-    return user;
+  if (!user) {
+    throw new Error('no user found');
+  }
+
+  return user;
 }
