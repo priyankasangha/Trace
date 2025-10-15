@@ -34,6 +34,7 @@ export async function createEvent(data, userId, journeyId) {
       place: data.place,
       coverImage: data.coverImage,
       albumImages: data.albumImages, 
+      journal: data.journal,
       journey: { connect: { id: journeyId } },
     },
   });
@@ -58,6 +59,7 @@ export async function editEvent(data, userId, journeyId, eventId) {
       place: data.place,
       coverImage: data.coverImage,
       albumImages: data.albumImages,
+      journal: data.journal,
       hiddenFromMe: data.hiddenFromMe,
       hiddenFromOthers: data.hiddenFromOthers,
       anniversaryEnabled: data.anniversaryEnabled,

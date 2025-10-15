@@ -78,6 +78,7 @@ model Event {
   place String?
   coverImage String?
   albumImages String[]
+  journal String?
   hiddenFromMe Boolean @default(false)
   hiddenFromOthers Boolean @default(false)
   anniversaryEnabled Boolean @default(false)

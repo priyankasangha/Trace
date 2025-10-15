@@ -31,6 +31,7 @@ function validateEventData(data) {
     DataUtils.validateStringArrayField(data.albumImages, 'albumImages');
     DataUtils.validateNumberField(data.month, 'Month');
     DataUtils.validateNumberField(data.day, 'Day');
+    DataUtils.validateStringField(data.journal, 'Journal');
     DataUtils.validateBooleanField(data.hiddenFromMe, 'hiddenFromMe');
     DataUtils.validateBooleanField(data.hiddenFromOthers, 'hiddenFromOthers');
     DataUtils.validateBooleanField(data.anniversaryEnabled, 'anniversaryEnabled');
