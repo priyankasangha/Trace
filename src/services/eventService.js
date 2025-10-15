@@ -112,16 +112,14 @@ export async function editEvent(data, userId, journeyId, eventId) {
 
 
 // function that returns event details for events users can view
-export async function getEventById(userId, journeyId, eventId, options = {}) {
+export async function getEvent(userId, journeyId, eventId, options = {}) {
   await JourneyPerms.ensureUserCanViewJourney(userId, journeyId);
+  const canSee = await EventPerms.canUserSeeEvent(userId, journeyId, event, options);
+  if (!canSee) {
+    throw new Error("You do not have permission to view this event");
+  }
 
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    include: {
-      journey: { include: { participants: true } },
-    },
-  });
-
+  const event = await getAnyEventById(eventId);
   if (!event) {
     throw new Error("Event not found");
   }
@@ -136,7 +134,7 @@ export async function getEventById(userId, journeyId, eventId, options = {}) {
 }
 
 // just a general function to get any event by Id, no filters involved
-export async function getAnyEventById(eventId) {
+async function getAnyEventById(eventId) {
   const event = await prisma.event.findUnique({
     where: {
       id: eventId,
