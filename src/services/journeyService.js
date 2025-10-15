@@ -14,7 +14,7 @@ import * as JourneyValidations from '../helpers/serviceHelpers/validationHelpers
 // } from '../permissionsHelpers.js';
 
 import * as RoleUtils from '../helpers/utils/roleUtils.js';
-import * as FriendshipValidations from '../helpers/serviceHelpers/validationHelpers/friendshipValidationHelpers.js'; 
+import * as FriendshipValidations from '../helpers/serviceHelpers/validationHelpers/friendshipValidationHelpers.js';
 
 // CRUD FUNCTIONS FOR JOURNIES
 
@@ -84,13 +84,12 @@ export async function deleteJourney(user, journeyId) {
 // VISIBILITY FUNCTIONS
 
 export async function getMyJournies(userId) {
-   return prisma.participant.findMany({
-    where: { 
-        userId: userId,
-        role: { in: [JourneyRole.PRIMARY_OWNER, JourneyRole.CO_OWNER] },
-      },
-    include:
-      { journey: true },
+  return prisma.participant.findMany({
+    where: {
+      userId: userId,
+      role: { in: [JourneyRole.PRIMARY_OWNER, JourneyRole.CO_OWNER] },
+    },
+    include: { journey: true },
   });
 }
 
@@ -107,7 +106,7 @@ export async function getOneFriendsPublicJourneys(userId, friendId) {
     },
     include: {
       participants: true,
-    }
+    },
   });
 }
 
@@ -115,18 +114,16 @@ export async function getOneFriendsPublicJourneys(userId, friendId) {
 
 export async function getMyCompletedJourneys(userId) {
   return prisma.participant.findMany({
-    where: { 
-        userId: userId,
-        role: { in: [JourneyRole.PRIMARY_OWNER, JourneyRole.CO_OWNER] },
-        journey: {
-          completed: true,
-        },
+    where: {
+      userId: userId,
+      role: { in: [JourneyRole.PRIMARY_OWNER, JourneyRole.CO_OWNER] },
+      journey: {
+        completed: true,
       },
-    include:
-      { journey: true },
+    },
+    include: { journey: true },
   });
 }
-
 
 // TODO figure out the flow for adding a cowoner
 // TODO figure out flow for adding a friend

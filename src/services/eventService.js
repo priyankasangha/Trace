@@ -1,19 +1,16 @@
 import prisma from '../prisma/client.js';
 import { JourneyRole } from '@prisma/client';
-import * as JourneyPerms from "../helpers/permissionsHelpers/journeyPermissionsHelpers.js";
-import * as EventPerms from "../helpers/permissionsHelpers/eventPermissionsHelper.js";
-import * as RoleUtils from "../helpers/utils/roleUtils";
-import * as EventValidation from  '../helpers/serviceHelpers/va lidationHelpers/eventValidationHelpers.js';
+import * as JourneyPerms from '../helpers/permissionsHelpers/journeyPermissionsHelpers.js';
+import * as EventPerms from '../helpers/permissionsHelpers/eventPermissionsHelper.js';
+import * as RoleUtils from '../helpers/utils/roleUtils';
+import * as EventValidation from '../helpers/serviceHelpers/va lidationHelpers/eventValidationHelpers.js';
 
 // TODO: MAKE SURE WE DON'T RETURN THE WHOLE EVENT, BUT JUST THE FIELDS WE WANT
 
-
-
-
 // Viewing Modes for Events
 export const VIEW_MODES = {
-  ALL_EVENTS: "ALL_EVENTS",
-  VISIBLE_EVENTS: "VISIBLE_EVENTS"
+  ALL_EVENTS: 'ALL_EVENTS',
+  VISIBLE_EVENTS: 'VISIBLE_EVENTS',
 };
 
 // EVENT CRUD FUNCTIONS
@@ -33,7 +30,7 @@ export async function createEvent(data, userId, journeyId) {
       city: data.city,
       place: data.place,
       coverImage: data.coverImage,
-      albumImages: data.albumImages, 
+      albumImages: data.albumImages,
       journal: data.journal,
       journey: { connect: { id: journeyId } },
     },
@@ -76,28 +73,23 @@ export async function editEvent(data, userId, journeyId, eventId) {
   return updatedEvent;
 }
 
- export async function deleteEvent(userId, journeyId, eventId) {
+export async function deleteEvent(userId, journeyId, eventId) {
   await EventPerms.ensureUserCanDeleteEvent(userId, journeyId);
 
   await prisma.event.delete({
     where: { id: eventId },
   });
- }
+}
 
+// EVENT VIEWING FUNCTIONS
 
- // EVENT VIEWING FUNCTIONS 
-
- // this differs based on the users view/permissions
- export async function getAllJourneyEvents(userId, journeyId, options = {}) {
+// this differs based on the users view/permissions
+export async function getAllJourneyEvents(userId, journeyId, options = {}) {
   await JourneyPerms.ensureUserCanViewJourney(userId, journeyId);
 
   const events = await prisma.event.findMany({
     where: { journeyId },
-    orderBy: [ 
-      { year: 'asc' },
-      { month: 'asc' },
-      { day: 'asc' }
-    ],
+    orderBy: [{ year: 'asc' }, { month: 'asc' }, { day: 'asc' }],
   });
 
   const visibleEvents = [];
@@ -108,27 +100,23 @@ export async function editEvent(data, userId, journeyId, eventId) {
   }
 
   return visibleEvents;
- }
-
+}
 
 // function that returns event details for events users can view
 export async function getEvent(userId, journeyId, eventId, options = {}) {
   await JourneyPerms.ensureUserCanViewJourney(userId, journeyId);
-  const canSee = await EventPerms.canUserSeeEvent(userId, journeyId, event, options);
+  const canSee = await EventPerms.canUserSeeEvent(
+    userId,
+    journeyId,
+    event,
+    options
+  );
   if (!canSee) {
-    throw new Error("You do not have permission to view this event");
+    throw new Error('You do not have permission to view this event');
   }
 
   const event = await getAnyEventById(eventId);
-  if (!event) {
-    throw new Error("Event not found");
-  }
-
-  // check if user can see this specific event
-  const canView = await EventPerms.canUserSeeEvent(userId, journeyId, event, options);
-  if (!canView) {
-    throw new Error("You do not have permission to view this event");
-  }
+  await EventPerms.ensureUserCanSeeEvent(userId, journeyId, event, options);
 
   return event;
 }
@@ -142,8 +130,7 @@ async function getAnyEventById(eventId) {
   });
 
   if (!event) {
-    throw new Error("Event not found");
+    throw new Error('Event not found');
   }
   return event;
 }
-

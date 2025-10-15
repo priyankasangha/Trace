@@ -7,7 +7,7 @@ import { ensureAuthenticated } from '../middleware/authMiddleware.js';
 // methods are:
 //
 // getMyJournies(userId)
-// getOneFriendsPublicJourneys(userId, friendId) 
+// getOneFriendsPublicJourneys(userId, friendId)
 // getMyCompletedJourneys(userId)
 const router = express.Router();
 
@@ -66,13 +66,16 @@ router.get('/me', ensureAuthenticated, async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
-}); 
+});
 
 router.get('/friend/:friendId', ensureAuthenticated, async (req, res) => {
   try {
     const user = req.user;
     const friendId = parseInt(req.params.friendId, 10);
-    const journeys = await Journey.getOneFriendsPublicJourneys(user.id, friendId);
+    const journeys = await Journey.getOneFriendsPublicJourneys(
+      user.id,
+      friendId
+    );
     res.json(journeys);
   } catch (err) {
     res.status(400).json({ error: err.message });

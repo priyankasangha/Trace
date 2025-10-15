@@ -26,16 +26,23 @@ export async function ensureUserCanEditEvent(userId, journeyId) {
 }
 
 export async function canUserSeeEvent(userId, journeyId, event, options = {}) {
-  const isOwner = await JourneyPerms.isCoOwnerOrPrimaryJourneyOwner(userId, journeyId);
+  const isOwner = await JourneyPerms.isCoOwnerOrPrimaryJourneyOwner(
+    userId,
+    journeyId
+  );
   const viewMode = options.viewMode ?? 'VISIBLE_EVENTS';
 
   if (isOwner) {
     if (viewMode === 'VISIBLE_EVENTS') {
       return !event.hiddenFromMe;
-    } 
+    }
     return true; // Owner + secret mode shows everything
   } else {
     return !event.hiddenFromOthers; // Viewer sees only public events
   }
 }
 
+export async function ensureUserCanSeeEvent(userId, journeyId, event, options = {}) {
+  const canSee = await canUserSeeEvent(userId, journeyId, event, options);
+  throwPermissionError(canSee, 'User cannot view this event');
+}

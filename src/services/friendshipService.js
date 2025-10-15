@@ -5,7 +5,7 @@ import * as RoleUtils from '../helpers/utils/roleUtils.js';
 import * as FriendshipValidation from '../helpers/serviceHelpers/validationHelpers/friendshipValidationHelpers.js';
 import { FriendshipStatus } from '../../../prismaClient.js';
 
-// mutual friendship model schema just for reference 
+// mutual friendship model schema just for reference
 // TODO: delete after implementing the functions
 // model Friendship {
 //   id Int @id @default(autoincrement())
@@ -29,24 +29,23 @@ import { FriendshipStatus } from '../../../prismaClient.js';
 //   NONE
 // }
 
-
 export async function sendFriendRequest(userId, friendId) {
   await FriendshipValidation.validFriendshipRequest(userId, friendId);
   return await prisma.friendship.create({
     data: {
-        userId: userId,
-        friendId: friendId,
-        status: FriendshipStatus.PENDING
-    }
+      userId: userId,
+      friendId: friendId,
+      status: FriendshipStatus.PENDING,
+    },
   });
 }
 
 export async function acceptFriendRequest(userId, friendId) {
   const request = await prisma.friendship.update({
-    where: { 
+    where: {
       userId_friendId: {
         userId: userId,
-        friendId: friendId
+        friendId: friendId,
       },
     },
     data: {
@@ -61,7 +60,7 @@ export async function rejectFriendRequest(userId, friendId) {
     where: {
       userId_friendId: {
         userId: userId,
-        friendId: friendId
+        friendId: friendId,
       },
     },
     data: {
@@ -93,15 +92,15 @@ export async function getPendingFriendRequests(userId) {
 
 export async function getFriendshipStatus(userId, friendId) {
   const status = await prisma.friendship.findUnique({
-    where: { 
+    where: {
       userId_friendId: {
         userId: userId,
-        friendId: friendId
+        friendId: friendId,
       },
     },
     select: {
       status: true,
-    }
+    },
   });
   return status;
 }

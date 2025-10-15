@@ -7,8 +7,7 @@ import {
 
 const router = express.Router();
 
-// the functions are: 
-
+// the functions are:
 
 // create new event
 router.post('/:journeyId/events', async (req, res) => {
