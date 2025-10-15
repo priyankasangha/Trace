@@ -1,19 +1,23 @@
 import express from 'express';
 
-import {
-  createJourney,
-  editJourney,
-  deleteJourney,
-} from '../services/journeyService.js';
+import * as Journey from '../services/journeyService.js';
+// TODO: actually implement this middleware
+import { ensureAuthenticated } from '../middleware/authMiddleware.js';
 
+// methods are:
+//
+// getMyJournies(userId, journeyId)
+// deleteJourney(data, user, journeyId)
+// getOneFriendsPublicJourneys(userId, friendId) 
+// getMyCompletedJourneys(userId)
 const router = express.Router();
 
 // create a new journey
-router.post('/', async (req, res) => {
+router.post('/', ensureAuthenticated, async (req, res) => {
   try {
     const user = req.user;
-    const journeyData = req.body;
-    const journey = await createJourney(journeyData, user);
+    const data = req.body;
+    const journey = await Journey.createJourney(data, user);
     res.status(201).json(journey);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -21,12 +25,12 @@ router.post('/', async (req, res) => {
 });
 
 // edit a journey
-router.put('/:journeyId', async (req, res) => {
+router.put('/:journeyId', ensureAuthenticated, async (req, res) => {
   try {
     const user = req.user;
     const journeyId = parseInt(req.params.journeyId, 10);
-    const journeyData = req.body;
-    const updatedJourney = await editJourney(journeyData, user, journeyId);
+    const data = req.body;
+    const updatedJourney = await editJourney(data, user, journeyId);
     res.json(updatedJourney);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -34,15 +38,21 @@ router.put('/:journeyId', async (req, res) => {
 });
 
 // delete journey
-router.delete('/:journeyId', async (req, res) => {
+router.delete('/:journeyId', ensureAuthenticated, async (req, res) => {
   try {
     const user = req.user;
     const journeyId = parseInt(req.params.journeyId, 10);
-    await deleteJourney({}, user, journeyId);
+    await deleteJourney(user, journeyId);
     res.status(204).send();
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
+
+// router.get('/completed', ensureAuthenticated, async (req, res) => {
+//   try {
+//     const user = req.user;
+//     const journeys = await Journey.getMyCompletedJourneys(user.id);
+//   })
 
 export default router;

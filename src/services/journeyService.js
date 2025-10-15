@@ -2,6 +2,7 @@ import prisma from '../prisma/client.js';
 import { JourneyRole, JourneyVisibility } from '../prisma/client.js';
 import * as JourneyPerms from '../helpers/permissionsHelpers/journeyPermissionsHelpers.js';
 import * as DataUtils from '../helpers/utils/dataUtils.js';
+import * as JourneyValidations from '../helpers/serviceHelpers/validationHelpers/journeyValidationHelpers.js';
 // import {
 //   isUserLoggedIn,
 //   isExistingMember,
@@ -13,11 +14,12 @@ import * as DataUtils from '../helpers/utils/dataUtils.js';
 // } from '../permissionsHelpers.js';
 
 import * as RoleUtils from '../helpers/utils/roleUtils.js';
+import * as FriendshipValidations from '../helpers/serviceHelpers/validationHelpers/friendshipValidationHelpers.js'; 
 
 // CRUD FUNCTIONS FOR JOURNIES
 
 export async function createJourney(data, user) {
-  data = DataUtils.validateCreateJourneyData(data);
+  data = FriendshipValidations.validateCreateJourneyData(data);
 
   const journey = await prisma.journey.create({
     data: {
@@ -45,7 +47,7 @@ export async function createJourney(data, user) {
 
 // also covers changing the journey visiblity
 export async function editJourney(data, user, journeyId) {
-  data = DataUtils.validateEditJourneyData(data);
+  data = FriendshipValidations.validateEditJourneyData(data);
   await JourneyPerms.enureUserCanEditJourney(user.id, journeyId);
 
   // keeps fields that are not undefined from user (like only stuff they updated)
@@ -70,7 +72,7 @@ export async function editJourney(data, user, journeyId) {
   return updatedJourney;
 }
 
-export async function deleteJourney(data, user, journeyId) {
+export async function deleteJourney(user, journeyId) {
   await JourneyPerms.ensureUserCanDeleteJourney(user.id, journeyId);
   await prisma.journey.delete({
     where: {
@@ -81,45 +83,47 @@ export async function deleteJourney(data, user, journeyId) {
 
 // VISIBILITY FUNCTIONS
 
-export async function getMyJournies(userId, journeyId) {
-  await RoleUtils.isCoOwnerOrPrimaryJourneyOwner(userId, journeyId);
-
-  return prisma.journey.findMany({
-    where: {
-      user: {
-        some: {
-          userId: user.id,
-          role: { in: [JourneyRole.PRIMARY_OWNER, JourneyRole.CO_OWNER] },
-        },
+export async function getMyJournies(userId) {
+   return prisma.participant.findMany({
+    where: { 
+        userId: userId,
+        role: { in: [JourneyRole.PRIMARY_OWNER, JourneyRole.CO_OWNER] },
       },
-    },
-    include: { user: true },
+    include:
+      { journey: true },
   });
 }
 
 export async function getOneFriendsPublicJourneys(userId, friendId) {
+  await FriendshipValidations.ensureIsMutualFriend(userId, friendId);
   return prisma.journey.findMany({
     where: {
-      user: {
+      visibility: JourneyVisibility.PUBLIC,
+      participants: {
         some: {
-          userId: { in: friendIds },
+          userId: friendId,
         },
       },
-      visibility: JourneyVisibility.PUBLIC,
     },
-    include: { user: true },
+    include: {
+      participants: true,
+    }
   });
 }
 
 // TODO: get all freinds's journeys
 
-export async function getCompletedJourneys(userId) {
-  return prisma.journey.findMany({
-    where: {
-      user: { some: { userId } },
-      completed: true,
-    },
-    include: { user: true },
+export async function getMyCompletedJourneys(userId) {
+  return prisma.participant.findMany({
+    where: { 
+        userId: userId,
+        role: { in: [JourneyRole.PRIMARY_OWNER, JourneyRole.CO_OWNER] },
+        journey: {
+          completed: true,
+        },
+      },
+    include:
+      { journey: true },
   });
 }
 
