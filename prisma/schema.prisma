@@ -109,6 +109,5 @@ model Friendship {
 enum FriendshipStatus {
   PENDING
   ACCEPTED
-  BLOCKED
   NONE
 }

@@ -30,8 +30,8 @@ import { FriendshipStatus } from '../../../prismaClient.js';
 // }
 
 
-export async function sendFriendRequest(userId, toUserId) {
-  await FriendshipValidation.validFriendshipRequest(fromUserId, toUserId);
+export async function sendFriendRequest(userId, friendId) {
+  await FriendshipValidation.validFriendshipRequest(userId, friendId);
   return await prisma.friendship.create({
     data: {
         userId: userId,
@@ -42,22 +42,66 @@ export async function sendFriendRequest(userId, toUserId) {
 }
 
 export async function acceptFriendRequest(userId, friendId) {
-  const request = await prisma.friendRequest.findUnique({
-    where: { id: userId },
+  const request = await prisma.friendship.update({
+    where: { 
+      userId_friendId: {
+        userId: userId,
+        friendId: friendId
+      },
+    },
+    data: {
+      status: FriendshipStatus.ACCEPTED,
+    },
   });
+  return request;
 }
 
 export async function rejectFriendRequest(userId, friendId) {
+  const request = await prisma.friendship.update({
+    where: {
+      userId_friendId: {
+        userId: userId,
+        friendId: friendId
+      },
+    },
+    data: {
+      status: FriendshipStatus.NONE,
+    },
+  });
+  return request;
 }
 
-export async function getFriends(userId) {
-
+export async function getMyFriends(userId) {
+  const myFriends = await prisma.friendship.findMany({
+    where: {
+      userId: userId,
+      status: FriendshipStatus.ACCEPTED,
+    },
+  });
+  return myFriends;
 }
 
 export async function getPendingFriendRequests(userId) {
-
+  const pendingRequests = await prisma.friendship.findMany({
+    where: {
+      userId: userId,
+      status: FriendshipStatus.PENDING,
+    },
+  });
+  return pendingRequests;
 }
 
-export async function getFeiendshipStatus(userId, friendId) {
-
+export async function getFriendshipStatus(userId, friendId) {
+  const status = await prisma.friendship.findUnique({
+    where: { 
+      userId_friendId: {
+        userId: userId,
+        friendId: friendId
+      },
+    },
+    select: {
+      status: true,
+    }
+  });
+  return status;
 }
