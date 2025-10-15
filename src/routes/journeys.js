@@ -6,8 +6,7 @@ import { ensureAuthenticated } from '../middleware/authMiddleware.js';
 
 // methods are:
 //
-// getMyJournies(userId, journeyId)
-// deleteJourney(data, user, journeyId)
+// getMyJournies(userId)
 // getOneFriendsPublicJourneys(userId, friendId) 
 // getMyCompletedJourneys(userId)
 const router = express.Router();
@@ -49,10 +48,35 @@ router.delete('/:journeyId', ensureAuthenticated, async (req, res) => {
   }
 });
 
-// router.get('/completed', ensureAuthenticated, async (req, res) => {
-//   try {
-//     const user = req.user;
-//     const journeys = await Journey.getMyCompletedJourneys(user.id);
-//   })
+router.get('/completed', ensureAuthenticated, async (req, res) => {
+  try {
+    const user = req.user;
+    const journeys = await Journey.getMyCompletedJourneys(user.id);
+    res.json(journeys);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.get('/me', ensureAuthenticated, async (req, res) => {
+  try {
+    const user = req.user;
+    const journeys = await Journey.getMyCompletedJourneys(user.id);
+    res.json(journeys);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}); 
+
+router.get('/friend/:friendId', ensureAuthenticated, async (req, res) => {
+  try {
+    const user = req.user;
+    const friendId = parseInt(req.params.friendId, 10);
+    const journeys = await Journey.getOneFriendsPublicJourneys(user.id, friendId);
+    res.json(journeys);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 export default router;
