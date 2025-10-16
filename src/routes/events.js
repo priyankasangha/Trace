@@ -1,9 +1,5 @@
 import express from 'express';
-import {
-  createEvent,
-  editEvent,
-  deleteEvent,
-} from '../services/eventService.js';
+import * as Event from '../services/eventService.js';
 
 const router = express.Router();
 
@@ -15,7 +11,7 @@ router.post('/:journeyId/events', async (req, res) => {
     const user = req.user;
     const journeyId = parseInt(req.params.journeyId, 10);
     const eventData = req.body;
-    const event = await createEvent(eventData, user, journeyId);
+    const event = await Event.createEvent(eventData, user, journeyId);
     res.status(201).json(event);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -29,7 +25,7 @@ router.post('/:journeyId/events/:eventId', async (req, res) => {
     const journeyId = parseInt(req.params.journeyId, 10);
     const eventId = parseInt(req.params.eventId, 10);
     const eventData = req.body;
-    const event = await editEvent(eventData, user, journeyId, eventId);
+    const event = await Event.editEvent(eventData, user, journeyId, eventId);
     res.status(200).json(event);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -41,7 +37,7 @@ router.delete('/:journeyId/events/:eventId', async (req, res) => {
     const user = req.user;
     const journeyId = parseInt(req.params.journeyId, 10);
     const eventId = parseInt(req.params.eventId, 10);
-    await deleteEvent(user, journeyId, eventId);
+    await Event.deleteEvent(user, journeyId, eventId);
     res.status(204).send();
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -54,7 +50,7 @@ router.get('/:journeyId/events', async (req, res) => {
     const user = req.user;
     const journeyId = parseInt(req.params.journeyId, 10);
     const viewMode = req.query.viewMode || 'VISIBLE_EVENTS'; // or 'ALL_EVENTS'
-    const events = await getAllJourneyEvents(user.id, journeyId, { viewMode });
+    const events = await Event.getAllJourneyEvents(user.id, journeyId, { viewMode });
     res.json(events);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -68,7 +64,7 @@ router.get('/:journeyId/events/:eventId', async (req, res) => {
     const journeyId = parseInt(req.params.journeyId, 10);
     const viewMode = req.query.viewMode || 'VISIBLE_EVENTS'; // or 'ALL_EVENTS'
     const eventId = parseInt(req.params.eventId, 10);
-    const event = await getEvent(user.id, journeyId, eventId, { viewMode });
+    const event = await Event.getEvent(user.id, journeyId, eventId, { viewMode });
     res.json(event);
   } catch (err) {
     res.status(400).json({ error: err.message });
