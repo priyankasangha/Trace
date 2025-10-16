@@ -43,22 +43,6 @@ app.get('/', (_req, res) => {
   res.send('Backend is running!');
 });
 
-// start authentication with Google
-app.get(
-  '/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
-
-// Google redirects here after authentication
-app.get(
-  '/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
-  (req, res) => {
-    // Successful authentication, redirect home.
-    const user = req.user;
-    res.send(`Hello ${user?.name}, you serve hella cunt.`);
-  }
-);
 
 // mount route to add event
 app.use('/api/journeys/:journeyId/events', ensureAuthenticated, eventRoutes);
