@@ -1,24 +1,16 @@
-// jest.config.cjs
-module.exports = {
-  // Use ts-jest preset so Jest can run TypeScript files
-  preset: 'ts-jest',
-
-  // Node.js environment for tests
+export default {
+  // Run tests in a Node.js-like environment (not a browser)
   testEnvironment: 'node',
 
-  // Only run test files that match this pattern
-  testMatch: ['**/src/tests/**/*.test.ts'],
+  // Look for test files inside /tests with names like *.test.js
+  testMatch: ['**/tests/**/*.test.js'],
 
-  // File types Jest will recognize
-  moduleFileExtensions: ['ts', 'js', 'json', 'node'],
+  // File extensions Jest will recognize
+  moduleFileExtensions: ['js', 'json', 'node'],
 
-  // Globals configuration for ts-jest
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.json', // points to your tsconfig.json
-    },
-  },
-
-  // Optional: ignore node_modules
+  // Ignore test files inside node_modules
   testPathIgnorePatterns: ['/node_modules/'],
+
+  // Optional: clear mocks between tests for consistency
+  clearMocks: true,
 };
