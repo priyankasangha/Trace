@@ -2,8 +2,8 @@ import prisma from '../prisma/client.js';
 import { JourneyRole } from '@prisma/client';
 import * as JourneyPerms from '../helpers/permissionsHelpers/journeyPermissionsHelpers.js';
 import * as EventPerms from '../helpers/permissionsHelpers/eventPermissionsHelper.js';
-import * as RoleUtils from '../helpers/utils/roleUtils';
-import * as EventValidation from '../helpers/serviceHelpers/va lidationHelpers/eventValidationHelpers.js';
+import * as RoleUtils from '../helpers/utils/roleUtils.js';
+import * as EventValidation from '../helpers/serviceHelpers/validationHelpers/eventValidationHelpers.js';
 
 // TODO: MAKE SURE WE DON'T RETURN THE WHOLE EVENT, BUT JUST THE FIELDS WE WANT
 

@@ -1,29 +1,57 @@
-import prisma from '../../../prisma/client.js';
-import { JourneyRole } from '../../../prisma/client.js';
-import {
-  isPrimaryJourneyOwner,
-  isCoOwnerOrPrimaryJourneyOwner,
-  isJourneyViewer,
-} from '../utils/roleUtils.js';
+// tests/services/eventService.test.js
+import { jest } from '@jest/globals';
+import prismaMock from '../mocks/prismaMock.js';
+import * as EventService from '../../src/services/eventService.js';
 
-// users can edit if they're any type of owner on the story
-export async function ensureUserCanEditJourney(userId, journeyId) {
-  const canEdit = await isCoOwnerOrPrimaryJourneyOwner(userId, journeyId);
-  if (!canEdit) {
-    throw new Error('User cannot edit this journey');
-  }
-}
+// -----------------------------
+// MOCK PRISMA
+// -----------------------------
+jest.mock('../../src/prisma/client.js', () => ({
+  __esModule: true,
+  default: prismaMock,
+}));
 
-// users can only delete if they're primary
-export async function ensureUserCanDeleteJourney(userId, journeyId) {
-  const canDelete = await isPrimaryJourneyOwner(userId, journeyId);
-  throwPermissionError(canDelete, 'User cannot delete this journey');
-}
+// -----------------------------
+// MOCK JOURNEY PERMISSIONS HELPERS
+// -----------------------------
+jest.mock(
+  '../../src/helpers/permissionsHelpers/journeyPermissionsHelpers.js',
+  () => ({
+    __esModule: true,
+    ensureUserCanEditJourney: jest.fn().mockResolvedValue(true),
+    ensureUserCanDeleteJourney: jest.fn().mockResolvedValue(true),
+    ensureUserCanViewJourney: jest.fn().mockResolvedValue(true),
+  })
+);
 
-// as long as they are added with any role on the journey they can view
-export async function ensureUserCanViewJourney(userId, journeyId) {
-  const isViewer = await isJourneyViewer(userId, journeyId);
-  const isOwner = await isCoOwnerOrPrimaryJourneyOwner(userId, journeyId);
-  const canViewJourney = isViewer || isOwner;
-  throwPermissionError(canViewJourney, 'User cannot view this journey');
-}
+// -----------------------------
+// TEST SUITE
+// -----------------------------
+describe('EventService', () => {
+  beforeEach(() => {
+    // Reset mocks before each test
+    jest.clearAllMocks();
+  });
+
+  test('should create an event', async () => {
+    const eventData = { name: 'Test Event', date: new Date() };
+    
+    // Mock Prisma create
+    prismaMock.event.create.mockResolvedValue({ id: 1, ...eventData });
+
+    const event = await EventService.createEvent(eventData);
+
+    expect(prismaMock.event.create).toHaveBeenCalledWith({ data: eventData });
+    expect(event).toEqual({ id: 1, ...eventData });
+  });
+
+  test('should throw an error if event creation fails', async () => {
+    const eventData = { name: 'Fail Event', date: new Date() };
+
+    prismaMock.event.create.mockRejectedValue(new Error('DB error'));
+
+    await expect(EventService.createEvent(eventData)).rejects.toThrow('DB error');
+  });
+
+  // You can add more tests here for other EventService functions
+});

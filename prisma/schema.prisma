@@ -19,7 +19,7 @@ model User {
   email String @unique
   profilePic String? // url profile pic
   createdAt DateTime @default(now())
-  updatedAt DateTime @updateAt
+  updatedAt DateTime @updatedAt
 
   journeys Participant[] // one user can be the journey user in many journeys
   friendships Friendship[] @relation("UserFriendships") // friends this user added
@@ -38,7 +38,7 @@ model Journey {
   anniversaryEnabled Boolean @default(false)
   completed Boolean @default(false)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updateAt
+  updatedAt DateTime @updatedAt
 
   favouritedBy User[] @relation("UserFavourites")
 }
@@ -84,7 +84,7 @@ model Event {
   anniversaryEnabled Boolean @default(false)
   reminderEnabled Boolean @default(false)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updateAt
+  updatedAt DateTime @updatedAt
 
   journey Journey @relation(fields: [journeyId], references: [id])
   journeyId Int
