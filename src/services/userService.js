@@ -1,179 +1,136 @@
 import prisma from '../prisma/client.js';
-import { JourneyRole, JourneyVisibility } from '../prisma/client.js';
-import {
-  isUserLoggedIn,
-  doesUserExist,
-  isExistingMember,
-  isUserPrimary,
-  isUserCoOwner,
-  checkJourneyFields,
-  getUserByEmail,
-  getUserById,
-} from '../permissionsHelpers.js';
 
-const MAX_FAVOURITED_JOURNIES = 10;
+const MAX_FAVOURITED_JOURNEYS = 3;
 
-// note: journeys friendships and friends of happens later
-export async function createUser(data) {
-  if (!data.email || !data.name) {
-    throw new Error('User must have a name and email');
-  }
-
-  const user = await prisma.user.create({
-    data: {
-      email: data.email,
-      name: data.name,
-    },
+async function ensureUserExists(userId) {
+  const user = await prisma.user.findUnique({
+    where: { id: Number(userId) },
+    select: { id: true },
   });
+  if (!user) throw new Error('User profile record not found.');
+}
 
+export async function findOrCreateAppleUser(applePayload) {
+  const { email, name } = applePayload;
+  if (!email) throw new Error('Email verification from Apple token is required.');
+
+  const cleanEmail = email.trim().toLowerCase();
+  let user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+
+  if (!user) {
+    const fallbackName = cleanEmail.split('@')[0];
+    const formattedName = name 
+      ? `${name.firstName || ''} ${name.lastName || ''}`.trim() 
+      : fallbackName;
+
+    user = await prisma.user.create({
+      data: {
+        email: cleanEmail,
+        name: formattedName || fallbackName,
+        profilePic: null, 
+      },
+    });
+  }
   return user;
 }
 
+export async function getUserProfile(userId) {
+  const user = await prisma.user.findUnique({
+    where: { id: Number(userId) },
+    select: { id: true, name: true, email: true, profilePic: true, createdAt: true },
+  });
+  if (!user) throw new Error('Profile record not found.');
+  return user;
+}
+
+export async function updateUserProfile(userId, data) {
+  const updateData = {};
+
+  if (data.name !== undefined) {
+    const trimmedName = data.name.trim();
+    if (trimmedName === '') throw new Error('Display name cannot be left blank.');
+    updateData.name = trimmedName;
+  }
+  if (data.profilePic !== undefined) updateData.profilePic = data.profilePic;
+  if (Object.keys(updateData).length === 0) throw new Error('No valid profile modifications provided.');
+
+  return await prisma.user.update({
+    where: { id: Number(userId) },
+    data: updateData,
+    select: { id: true, name: true, email: true, profilePic: true }
+  });
+}
+
 export async function deleteUser(userId) {
-  await doesUserExist(userId);
-  return await prisma.user.delete({
-    where: { id: userId },
-  });
+  await ensureUserExists(userId);
+  return await prisma.user.delete({ where: { id: Number(userId) } });
 }
 
-export async function updateUser(userId, data) {
-  await doesUserExist(userId);
-  // remove undefined or null values to prevent accidental overwrites
-  const filteredData = Object.fromEntries(
-    Object.entries(data).filter(([_, v]) => v !== null && v !== undefined)
-  );
-
-  if (Object.keys(filteredData).length === 0) {
-    throw new Error('No valid fields to update');
-  }
-
-  return prisma.user.update({
-    where: { id: userId },
-    data: filteredData,
-    include: {
-      favourites: true,
-      friendships: true,
-      friendsOf: true,
-    },
-  });
-}
-
-export async function getFavouriteJourneys(userId) {
-  await doesUserExist(userId);
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      favourites: {
-        include: {
-          participants: true,
-          events: true,
-        },
-        orderBy: { startYear: 'desc' },
-      },
-    },
-  });
-
-  return user.favourites;
-}
-
-export async function getUserJourneysByRole(
-  userId,
-  roleFilter = 'all',
-  { skip = 0, take = 10 } = {}
-) {
-  await doesUserExist(userId);
-  let roleCondition = undefined;
-
-  if (roleFilter === 'mine') {
-    roleCondition = { role: { in: ['PRIMARY_OWNER', 'CO_OWNER'] } };
-  } else if (roleFilter === 'all') {
-    roleCondition = { role: { in: ['PRIMARY_OWNER', 'CO_OWNER', 'VIEWER'] } };
-  } else if (roleFilter === 'friends') {
-    roleCondition = { role: { in: ['VIEWER'] } };
-  }
+export async function toggleJourneyFavorite(userId, journeyId) {
+  await ensureUserExists(userId);
+  
+  const uId = Number(userId);
+  const jId = Number(journeyId);
 
   const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      journeys: {
-        where: roleCondition,
-        include: {
-          participants: true,
-          events: true,
-          favouritedBy: { where: { id: userId } },
-        },
-        skip,
-        take,
-        orderBy: { startYear: 'desc' },
-      },
-    },
+    where: { id: uId },
+    select: { favorites: { select: { id: true } } }
   });
 
-  return user.journeys;
-}
+  const isFavorited = user.favorites.some(j => j.id === jId);
 
-// FUNCTIONS FOR USER FAVOURITES
-
-export async function toggleFavourites(userId, journeyId) {
-  await doesUserExist(userId);
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { favourites: { select: { id: true } } },
-  });
-
-  if (!user) {
-    throw new Error('User not found');
+  if (!isFavorited && user.favorites.length >= MAX_FAVOURITED_JOURNEYS) {
+    throw new Error(`You can only pin a maximum of ${MAX_FAVOURITED_JOURNEYS} journeys to your dashboard.`);
   }
-
-  // boolean that returns true if it is favourited
-  const isFavourited = await isJourneyFavouritedByUser(userId, journeyId);
-  const isUserOverLimit = await isJourneyOverLimit(userId);
 
   const updatedUser = await prisma.user.update({
-    where: { id: userId },
+    where: { id: uId },
     data: {
-      favourites: isFavourited
-        ? { disconnect: { id: journeyId } }
-        : { connect: { id: journeyId } },
+      favorites: isFavorited
+        ? { disconnect: { id: jId } }
+        : { connect: { id: jId } }
     },
-
-    include: {
-      favourites: true,
-      friendships: true,
-      friendsOf: true,
-      journeys: true,
-    },
+    select: {
+      id: true,
+      favorites: { orderBy: { updatedAt: 'desc' } }
+    }
   });
+
   return {
-    user: updatedUser,
-    action: isFavourited ? 'removed' : 'added',
+    favorites: updatedUser.favorites,
+    action: isFavorited ? 'removed' : 'added'
   };
 }
 
-// HELPES:
+export async function getFavoriteJourneys(userId) {
+  await ensureUserExists(userId);
 
-async function isJourneyFavouritedByUser(userId, journeyId) {
   const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      favourites: {
-        where: { id: journeyId },
-        select: { id: true },
-      },
-    },
+    where: { id: Number(userId) },
+    include: {
+      favorites: {
+        include: {
+          participants: {
+            include: {
+              user: { select: { id: true, name: true, profilePic: true } }
+            }
+          },
+          events: true
+        },
+        orderBy: { updatedAt: 'desc' }
+      }
+    }
   });
-
-  return user?.favourites?.length > 0;
+  return user.favorites;
 }
 
-// throws error if user is over their limit of favourited journies
-async function isJourneyOverLimit(userId) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { favourites: true },
-  });
+export async function findUserByEmail(email) {
+  if (!email) throw new Error('An email string is required for lookup calculations.');
 
-  if (user.favourites.length >= MAX_FAVOURITED_JOURNIES) {
-    throw new Error('You can only have 10 favourited journeys');
-  }
+  const user = await prisma.user.findUnique({
+    where: { email: email.trim().toLowerCase() },
+    select: { id: true, name: true, email: true, profilePic: true }
+  });
+  if (!user) throw new Error('No account found matching that email address.');
+  return user;
 }

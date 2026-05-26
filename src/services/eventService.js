@@ -1,136 +1,139 @@
 import prisma from '../prisma/client.js';
-import { JourneyRole } from '@prisma/client';
-import * as JourneyPerms from '../helpers/permissionsHelpers/journeyPermissionsHelpers.js';
-import * as EventPerms from '../helpers/permissionsHelpers/eventPermissionsHelper.js';
-import * as RoleUtils from '../helpers/utils/roleUtils.js';
-import * as EventValidation from '../helpers/serviceHelpers/validationHelpers/eventValidationHelpers.js';
 
-// TODO: MAKE SURE WE DON'T RETURN THE WHOLE EVENT, BUT JUST THE FIELDS WE WANT
-
-// Viewing Modes for Events
 export const VIEW_MODES = {
   ALL_EVENTS: 'ALL_EVENTS',
-  VISIBLE_EVENTS: 'VISIBLE_EVENTS',
+  SELECT_EVENTS: 'SELECT_EVENTS',
 };
 
-// EVENT CRUD FUNCTIONS
+async function ensureParticipant(userId, journeyId) {
+  const participant = await prisma.participant.findUnique({
+    where: {
+      userId_journeyId: {
+        userId: Number(userId),
+        journeyId: Number(journeyId),
+      },
+    },
+  });
+  if (!participant) throw new Error('You do not have permission to access this journey.');
+}
 
-export async function createEvent(data, userId, journeyId) {
-  await EventPerms.ensureUserCanAddEvent(userId, journeyId);
-  data = EventValidation.validateCreateEventData(data);
+export async function createEvent(data, user, journeyId) {
+  const userId = user.id;
+  await ensureParticipant(userId, journeyId);
 
-  const event = await prisma.event.create({
+  return await prisma.event.create({
     data: {
       title: data.title,
       description: data.description,
-      year: data.year,
-      month: data.month,
-      day: data.day,
-      country: data.country,
-      city: data.city,
-      place: data.place,
+      year: Number(data.year),
+      month: data.month ? Number(data.month) : null,
+      day: data.day ? Number(data.day) : null,
+      locationName: data.locationName,
+      latitude: data.latitude ? parseFloat(data.latitude) : null,
+      longitude: data.longitude ? parseFloat(data.longitude) : null,
       coverImage: data.coverImage,
-      albumImages: data.albumImages,
+      albumImages: data.albumImages || [],
       journal: data.journal,
-      journey: { connect: { id: journeyId } },
+      anniversaryEnabled: data.anniversaryEnabled ?? false,
+      lastCelebratedYear: data.lastCelebratedYear ? Number(data.lastCelebratedYear) : null,
+      isVisibleInHighlights: data.isVisibleInHighlights ?? true,
+      journey: { connect: { id: Number(journeyId) } },
+      user: { connect: { id: Number(userId) } }
     },
-  });
-
-  return event;
-}
-
-export async function editEvent(data, userId, journeyId, eventId) {
-  await EventPerms.ensureUserCanEditEvent(userId, journeyId);
-  data = EventValidation.validateEditEventData(data);
-
-  // keeps fields that are not undefined from user (like only stuff they updated)
-  const updateData = Object.fromEntries(
-    Object.entries({
-      title: data.title,
-      description: data.description,
-      year: data.year,
-      month: data.month,
-      day: data.day,
-      country: data.country,
-      city: data.city,
-      place: data.place,
-      coverImage: data.coverImage,
-      albumImages: data.albumImages,
-      journal: data.journal,
-      hiddenFromMe: data.hiddenFromMe,
-      hiddenFromOthers: data.hiddenFromOthers,
-      anniversaryEnabled: data.anniversaryEnabled,
-      reminderEnabled: data.reminderEnabled,
-    }).filter(([_, v]) => v !== undefined)
-  );
-
-  // only updated fields get sent
-  const updatedEvent = await prisma.event.update({
-    where: { id: eventId },
-    data: updateData,
-  });
-
-  return updatedEvent;
-}
-
-export async function deleteEvent(userId, journeyId, eventId) {
-  await EventPerms.ensureUserCanDeleteEvent(userId, journeyId);
-
-  await prisma.event.delete({
-    where: { id: eventId },
-  });
-}
-
-// EVENT VIEWING FUNCTIONS
-
-// this differs based on the users view/permissions
-export async function getAllJourneyEvents(userId, journeyId, options = {}) {
-  await JourneyPerms.ensureUserCanViewJourney(userId, journeyId);
-
-  const events = await prisma.event.findMany({
-    where: { journeyId },
-    orderBy: [{ year: 'asc' }, { month: 'asc' }, { day: 'asc' }],
-  });
-
-  const visibleEvents = [];
-  for (const event of events) {
-    if (await EventPerms.canUserSeeEvent(userId, journeyId, event, options)) {
-      visibleEvents.push(event);
+    include: {
+      user: {
+        select: { id: true, name: true, profilePic: true }
+      }
     }
-  }
-
-  return visibleEvents;
+  });
 }
 
-// function that returns event details for events users can view
-export async function getEvent(userId, journeyId, eventId, options = {}) {
-  await JourneyPerms.ensureUserCanViewJourney(userId, journeyId);
-  const canSee = await EventPerms.canUserSeeEvent(
-    userId,
-    journeyId,
-    event,
-    options
-  );
-  if (!canSee) {
-    throw new Error('You do not have permission to view this event');
-  }
+export async function editEvent(data, user, journeyId, eventId) {
+  const userId = user.id;
+  await ensureParticipant(userId, journeyId);
 
-  const event = await getAnyEventById(eventId);
-  await EventPerms.ensureUserCanSeeEvent(userId, journeyId, event, options);
+  const updateData = {};
+  
+  if (data.title !== undefined) updateData.title = data.title;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.coverImage !== undefined) updateData.coverImage = data.coverImage;
+  if (data.albumImages !== undefined) updateData.albumImages = data.albumImages;
+  if (data.journal !== undefined) updateData.journal = data.journal;
+  if (data.locationName !== undefined) updateData.locationName = data.locationName;
+  if (data.isVisibleInHighlights !== undefined) updateData.isVisibleInHighlights = data.isVisibleInHighlights;
+  if (data.anniversaryEnabled !== undefined) updateData.anniversaryEnabled = data.anniversaryEnabled;
 
-  return event;
+  if (data.year !== undefined) updateData.year = Number(data.year);
+  if (data.month !== undefined) updateData.month = data.month ? Number(data.month) : null;
+  if (data.day !== undefined) updateData.day = data.day ? Number(data.day) : null;
+  if (data.latitude !== undefined) updateData.latitude = data.latitude ? parseFloat(data.latitude) : null;
+  if (data.longitude !== undefined) updateData.longitude = data.longitude ? parseFloat(data.longitude) : null;
+  if (data.lastCelebratedYear !== undefined) updateData.lastCelebratedYear = data.lastCelebratedYear ? Number(data.lastCelebratedYear) : null;
+
+  return await prisma.event.update({
+    where: { 
+      id: Number(eventId),
+      journeyId: Number(journeyId) 
+    },
+    data: updateData,
+    include: {
+      user: {
+        select: { id: true, name: true, profilePic: true }
+      }
+    }
+  });
 }
 
-// just a general function to get any event by Id, no filters involved
-async function getAnyEventById(eventId) {
-  const event = await prisma.event.findUnique({
-    where: {
-      id: eventId,
+export async function deleteEvent(user, journeyId, eventId) {
+  const userId = user.id;
+  await ensureParticipant(userId, journeyId);
+
+  return await prisma.event.delete({
+    where: { 
+      id: Number(eventId),
+      journeyId: Number(journeyId)
     },
   });
+}
 
-  if (!event) {
-    throw new Error('Event not found');
+export async function getAllJourneyEvents(userId, journeyId, options = {}) {
+  await ensureParticipant(userId, journeyId);
+
+  const queryConditions = { journeyId: Number(journeyId) };
+  if (options.viewMode === VIEW_MODES.SELECT_EVENTS) {
+    queryConditions.isVisibleInHighlights = true;
   }
+
+  return await prisma.event.findMany({
+    where: queryConditions,
+    orderBy: [
+      { year: 'asc' }, 
+      { month: 'asc' }, 
+      { day: 'asc' }
+    ],
+    include: {
+      user: {
+        select: { id: true, name: true, profilePic: true }
+      }
+    }
+  });
+}
+
+export async function getEvent(userId, journeyId, eventId) {
+  await ensureParticipant(userId, journeyId);
+
+  const event = await prisma.event.findUnique({
+    where: { id: Number(eventId) },
+    include: {
+      user: {
+        select: { id: true, name: true, profilePic: true }
+      }
+    }
+  });
+
+  if (!event || event.journeyId !== Number(journeyId)) {
+    throw new Error('Event not found within this journey.');
+  }
+
   return event;
 }

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,101 +8,70 @@ datasource db {
 }
 
 model User { 
-  id Int @id @default(autoincrement())
-  name String
-  email String @unique
-  profilePic String? // url profile pic
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int           @id @default(autoincrement())
+  name        String
+  email       String        @unique
+  profilePic  String?       // URL for profile picture
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
-  journeys Participant[] // one user can be the journey user in many journeys
-  friendships Friendship[] @relation("UserFriendships") // friends this user added
-  friendsOf Friendship[] @relation("FriendOf") // friends who added this user
-  favourites Journey[] @relation("UserFavourites")
+  journeys    Participant[] // Relationships to journeys this user can see and edit
 }
 
 model Journey {
-  id Int @id @default(autoincrement())
-  title String
-  description String?
-  visibility JourneyVisibility @default(PRIVATE) // could be public or private
-  coverPage String?
-  events Event[]
-  participants Participant[]
-  anniversaryEnabled Boolean @default(false)
-  completed Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int           @id @default(autoincrement())
+  title        String
+  description  String?
+  coverPage    String?
+  completed    Boolean       @default(false)
+  
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
-  favouritedBy User[] @relation("UserFavourites")
+  events       Event[]
+  participants Participant[]
 }
 
 model Participant {
-  userId Int
+  userId    Int
   journeyId Int
-  role JourneyRole
   
-  user User @relation(fields: [userId], references: [id])
-  journey Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  journey   Journey @relation(fields: [journeyId], references: [id], onDelete: Cascade)
 
-  @@id([userId, journeyId]) // composite id
+  @@id([userId, journeyId]) // Composite ID ensures a user is linked to a journey exactly once
   @@index([journeyId])
 }
 
-enum JourneyVisibility {
-  PUBLIC
-  PRIVATE
-}
-
-enum JourneyRole {
-  PRIMARY_OWNER
-  CO_OWNER
-  VIEWER
-}
-
 model Event {
-  id Int @id @default(autoincrement())
-  title String
-  description String?
-  year Int
-  month Int?
-  day Int?
-  country String?
-  city String?
-  place String?
-  coverImage String?
-  albumImages String[]
-  journal String?
-  hiddenFromMe Boolean @default(false)
-  hiddenFromOthers Boolean @default(false)
-  anniversaryEnabled Boolean @default(false)
-  reminderEnabled Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 Int      @id @default(autoincrement())
+  title              String
+  description        String?
+  
+  // Date Fields (Splitting lets you map exact points on a chronological timeline graph)
+  year               Int
+  month              Int?     
+  day                Int?     
+  
+  // Native macOS MapKit Fields
+  locationName       String?  // e.g., "The Colosseum" or "Central Park"
+  latitude           Float?   // e.g., 41.8902
+  longitude          Float?   // e.g., 12.4922
+  
+  coverImage         String?  // Flagship image per event milestone
+  albumImages        String[] // Array containing all paths/URLs for photo carousel/grid arrays
+  journal            String?  // Text area for long-form thoughts
+  
+  // Per-Event Anniversary Confetti Trackers
+  anniversaryEnabled Boolean  @default(false) // User can toggle this on or off in the UI
+  lastCelebratedYear Int?     // Tracks the last year the confetti popped for this specific event
 
-  journey Journey @relation(fields: [journeyId], references: [id])
-  journeyId Int
-}
+  // Dual-View Filter Toggle
+  isVisibleInHighlights Boolean @default(true) // Controls if it shows up in the "Select Events" view
 
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-// mutual friendship model
-model Friendship {
-  id Int @id @default(autoincrement())
-
-  userId Int
-  friendId Int
-
-  user User @relation("UserFriendships", fields: [userId], references: [id])
-  friend User @relation("FriendOf", fields: [friendId], references: [id])
-
-  status FriendshipStatus @default(NONE) // pending, accepted, blocked, NONE
-
-  @@index([friendId, status]) // composite for make status easy to lookup
-  @@unique([userId, friendId]) // no duplicate friendships
-}
-
-enum FriendshipStatus {
-  PENDING
-  ACCEPTED
-  NONE
+  journeyId          Int
+  journey            Journey  @relation(fields: [journeyId], references: [id], onDelete: Cascade)
 }
