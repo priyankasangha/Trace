@@ -16,6 +16,7 @@ model User {
   updatedAt   DateTime      @updatedAt
 
   journeys    Participant[] // Relationships to journeys this user can see and edit
+  feedbacks   Feedback[]
 }
 
 model Journey {
@@ -74,4 +75,18 @@ model Event {
 
   journeyId          Int
   journey            Journey  @relation(fields: [journeyId], references: [id], onDelete: Cascade)
+}
+
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  content   String   // The actual feedback message
+  urgency    Int     // 1-5
+  resolved  Boolean  @default(false) // So you can track if you've read/fixed it!
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Tracks who left the feedback
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
