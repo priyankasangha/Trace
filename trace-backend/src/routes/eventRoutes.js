@@ -4,6 +4,13 @@ import * as Event from '../services/eventService.js';
 
 const router = express.Router();
 
+// 💡 ADD THIS TEMPORARY ROUTE HERE (ABOVE THE PROTECT LINE)
+router.post('/test-connection', (req, res) => {
+  console.log("🚀 BOOM! Xcode successfully connected! Payload received:", req.body);
+  res.status(200).json({ message: "Connected successfully to trace-backend!" });
+});
+
+// Everything below this line stays completely protected
 router.use(protectWithApple);
 
 router.post('/:journeyId/events', async (req, res) => {
