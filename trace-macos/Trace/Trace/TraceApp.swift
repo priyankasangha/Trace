@@ -11,7 +11,8 @@ import SwiftUI
 struct TraceApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LoginView()
+                .environment(AppState())
         }
     }
 }

@@ -4,26 +4,39 @@ import SwiftUI
 // 1. THEME DESIGN TOKENS
 // ==========================================
 struct AppTheme {
-    // Backgrounds
-    static let primaryBackground = Color(hex: "#F3EFE9") // Soft cream
-    
-    // Core Typography & Fine Lines
+    // ------------------------------------------
+    // A. COLORS
+    // ------------------------------------------
+    static let primaryBackground = Color(hex: "#F3EFE9") // light cream
     static let primaryText = Color(hex: "#2A3038")       // Dark blue-toned charcoal
     
-    // Rose Gold Palette Hierarchy
-    static let roseGoldLight = Color(hex: "#F3D1C4")     // Subtle accents / canvas fills
-    static let roseGoldBase = Color(hex: "#E8BAB2")      // Primary actions / buttons
-    static let roseGoldMedium = Color(hex: "#E0A996")    // Hover & active states
-    static let roseGoldDark = Color(hex: "#C68B75")      // Fine-line borders and icons
+    // Rose Gold Palette
+    static let roseGoldLight = Color(hex: "#F3D1C4")
+    static let roseGoldBase = Color(hex: "#E8BAB2")
+    static let roseGoldMedium = Color(hex: "#E0A996")
+    static let roseGoldDark = Color(hex: "#C68B75")
     
-    // Layout Constants
+    // ------------------------------------------
+    // B. LAYOUT CONSTANTS
+    // ------------------------------------------
     static let thinLineWidth: CGFloat = 1.0
     static let regularLineWidth: CGFloat = 1.5
     
-    // Custom Cursive Dynamic Font
-    static func decorativeFont(size: CGFloat) -> Font {
-        return Font.custom("YourCursiveFontName", size: size)
-    }
+    // ------------------------------------------
+    // C. TYPOGRAPHY SYSTEM (Semantic Roles)
+    // ------------------------------------------
+    
+    static let appNameText: Font = .system(size: 34, weight: .regular, design: .serif).italic()
+    
+    static let largeTitle: Font = .system(size: 28, weight: .bold, design: .default)
+    
+    static let title: Font = .system(size: 20, weight: .semibold, design: .default)
+    
+    static let body: Font = .system(size: 14, weight: .regular, design: .default)
+    
+    static let subtitle: Font = .system(size: 12, weight: .medium, design: .default)
+    
+    static let tinyText: Font = .system(size: 6, weight: .regular, design: .default).italic()
 }
 
 // ==========================================
