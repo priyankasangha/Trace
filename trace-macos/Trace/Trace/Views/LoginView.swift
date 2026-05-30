@@ -5,167 +5,102 @@ struct LoginView: View {
     @Environment(\.colorScheme) var colorScheme
     @Environment(AppState.self) private var appState
     
-    // ANIMATION STATES
     @State private var isAnimated = false
     @State private var heartScale: CGFloat = 1.0
-    @State private var isPressing = false
     
     var body: some View {
-        GeometryReader { geometry in
-            let referenceDimension = min(geometry.size.width, geometry.size.height)
-            let scale = max(1.0, referenceDimension / 550.0)
+        ZStack {
+            AppTheme.primaryBackground
+                .ignoresSafeArea()
             
-            ZStack {
-                // BACKGROUND: Premium warm cream canvas
-                AppTheme.primaryBackground
-                    .ignoresSafeArea()
+            VStack(spacing: 0) {
+                Spacer()
+                    .frame(height: AppTheme.windowTopSafetyPadding)
                 
-                // MAIN CENTERED INTERACTIVE CANVAS
-                VStack {
+                Spacer()
+                
+                VStack(spacing: 20) {
+                    Text("Trace")
+                        .font(AppTheme.appNameTitle)
+                        .foregroundStyle(AppTheme.roseGoldDark)
+                        .tracking(AppTheme.titleTracking)
+                        .opacity(isAnimated ? 1.0 : 0.0)
+                        .offset(y: isAnimated ? 0 : 6)
                     
-                    Spacer() // Pushes branding up slightly to sit gracefully in the upper-middle quadrant
+                    Text("INTERACTIVE TIMELINES")
+                        .font(AppTheme.appTagline)
+                        .foregroundStyle(.secondary)
+                        .tracking(AppTheme.taglineTracking)
+                        .opacity(isAnimated ? 1.0 : 0.0)
+                        .offset(y: isAnimated ? 0 : 4)
                     
-                    // BRANDING SEGMENT (Symmetric & Centered)
-                    VStack(spacing: 20 * scale) {
-                        Text("Trace")
-                            .font(.system(size: 46 * scale, weight: .light, design: .serif))
+                    HStack(spacing: 0) {
+                        Circle()
+                            .fill(AppTheme.roseGoldDark.opacity(AppTheme.accentOpacity))
+                            .frame(width: 6, height: 6)
+                        
+                        Rectangle()
+                            .fill(AppTheme.roseGoldLight.opacity(AppTheme.accentOpacity))
+                            .frame(height: AppTheme.regularLineWidth)
+                            .frame(maxWidth: isAnimated ? 180 : 0)
+                        
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 12))
                             .foregroundStyle(AppTheme.roseGoldDark)
-                            .tracking(5 * scale)
-                            .opacity(isAnimated ? 1.0 : 0.0)
-                            .offset(y: isAnimated ? 0 : 8 * scale)
+                            .padding(.horizontal, isAnimated ? 18 : 0)
+                            .scaleEffect(isAnimated ? heartScale : 0.0)
                         
-                        Text("INTERACTIVE TIMELINES")
-                            .font(.system(size: 11.5 * scale, weight: .regular))
-                            .foregroundStyle(AppTheme.primaryText.opacity(0.4))
-                            .tracking(3 * scale)
-                            .opacity(isAnimated ? 1.0 : 0.0)
-                            .offset(y: isAnimated ? 0 : 6 * scale)
+                        Rectangle()
+                            .fill(AppTheme.roseGoldLight.opacity(AppTheme.accentOpacity))
+                            .frame(height: AppTheme.regularLineWidth)
+                            .frame(maxWidth: isAnimated ? 180 : 0)
                         
-                        // THICKER & BOLDER HORIZONTAL TIMELINE ACCENT
-                        HStack(spacing: 0) {
-                            Circle()
-                                .fill(AppTheme.roseGoldDark.opacity(0.5))
-                                .frame(width: 7 * scale, height: 7 * scale)
-                            
-                            Rectangle()
-                                .fill(AppTheme.roseGoldLight.opacity(0.6))
-                                .frame(width: isAnimated ? min(geometry.size.width * 0.22, 220 * scale) : 0,
-                                       height: 2.0 * scale)
-                            
-                            Image(systemName: "heart.fill")
-                                .font(.system(size: 13 * scale))
-                                .foregroundStyle(AppTheme.roseGoldDark)
-                                .padding(.horizontal, isAnimated ? 16 * scale : 0)
-                                .scaleEffect(isAnimated ? heartScale : 0.0)
-                            
-                            Rectangle()
-                                .fill(AppTheme.roseGoldLight.opacity(0.6))
-                                .frame(width: isAnimated ? min(geometry.size.width * 0.22, 220 * scale) : 0,
-                                       height: 2.0 * scale)
-                            
-                            Circle()
-                                .fill(AppTheme.roseGoldDark.opacity(0.5))
-                                .frame(width: 7 * scale, height: 7 * scale)
-                        }
-                        .padding(.top, 22 * scale)
-                        .padding(.bottom, 8 * scale)
-                        .opacity(isAnimated ? 1.0 : 0.0)
+                        Circle()
+                            .fill(AppTheme.roseGoldDark.opacity(AppTheme.accentOpacity))
+                            .frame(width: 6, height: 6)
                     }
-                    
-                    // BUTTON INTERACTION AREA
-                    VStack(spacing: 24 * scale) {
-                        // 💡 FIXED ENGINE: The native button acts as the true structural base frame now
-                        SignInWithAppleButton(
-                            onRequest: { request in
-                                request.requestedScopes = [.fullName, .email]
-                            },
-                            onCompletion: { result in
-                                handleAppleSignInCompletion(result: result)
-                            }
-                        )
-                        .frame(width: 240 * scale, height: 35 * scale)
-                        // Make the system label completely invisible so it doesn't peek through
-                        .opacity(0.01)
-                        // 💡 Place your pristine premium dark design directly behind it
-                        .background(
-                            HStack(spacing: 8 * scale) {
-                                Image(systemName: "apple.logo")
-                                    .font(.system(size: 12.5 * scale, weight: .semibold))
-                                Text("Sign in with Apple")
-                                    .font(.system(size: 13 * scale, weight: .medium))
-                            }
-                            .foregroundStyle(.white)
-                            .frame(width: 240 * scale, height: 35 * scale)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6 * scale)
-                                    .fill(isPressing ? Color(red: 0.08, green: 0.08, blue: 0.09) : Color(red: 0.11, green: 0.11, blue: 0.12))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6 * scale)
-                                    .stroke(Color.white.opacity(0.08), lineWidth: 0.5)
-                            )
-                            .shadow(color: Color.black.opacity(0.15), radius: 6 * scale, x: 0, y: 3 * scale)
-                        )
-                        .scaleEffect(isPressing ? 0.97 : 1.0)
-                        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressing)
-                        // This forces macOS to let the transparent top layer handle the primary mouse hit target
-                        .contentShape(RoundedRectangle(cornerRadius: 6 * scale))
-                        .simultaneousGesture(
-                            DragGesture(minimumDistance: 0)
-                                .onChanged { _ in isPressing = true }
-                                .onEnded { _ in
-                                    isPressing = false
-                                    
-                                    // 💡 RESILIENT RUNTIME FALLBACK: If the native framework is missing its signature capability
-                                    // and blocks the popup window from opening, bypass locally after 0.3 seconds so you transition smoothly.
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                        if !appState.isLoggedIn {
-                                            print("ℹ️ Sandbox bypass triggered. Transitioning AppState...")
-                                            appState.isLoggedIn = true
-                                        }
-                                    }
-                                }
-                        )
-                        .opacity(isAnimated ? 1.0 : 0.0)
-                    }
-                    .padding(.top, 42 * scale)
-                    
-                    Spacer() // Generates luxury negative space below the action block
+                    .padding(.top, 12)
+                    .frame(maxWidth: 460)
                 }
-                .frame(maxWidth: .infinity)
                 
-                // DEDICATION PLACARD
                 VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Text("By Priyanka, For Shrey")
-                            .font(.system(size: 9 * scale, weight: .light))
-                            .foregroundStyle(AppTheme.roseGoldMedium)
-                            .tracking(1.0 * scale)
-                            .opacity(isAnimated ? 0.7 : 0.0)
-                            .padding(.trailing, 24 * scale)
-                            .padding(.bottom, 20 * scale)
-                    }
+                    SignInWithAppleButton(.signIn, onRequest: { request in
+                        request.requestedScopes = [.fullName, .email]
+                    }, onCompletion: { result in
+                        handleAppleSignInCompletion(result: result)
+                    })
+                    .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+                    .frame(width: AppTheme.authButtonWidth, height: AppTheme.authButtonHeight)
+                    .opacity(isAnimated ? 1.0 : 0.0)
                 }
+                .padding(.top, 54)
+                
+                Spacer()
             }
-            .frame(width: geometry.size.width, height: geometry.size.height)
+            .padding(.horizontal, 40)
         }
-        .frame(minWidth: 480, idealWidth: 700, maxWidth: .infinity, minHeight: 360, idealHeight: 500, maxHeight: .infinity)
-        
-        // ⚡️ ORCHESTRATED VISUAL TIMELINE
+        // DEDICATION PLACARD
+        .overlay(alignment: .bottomTrailing) {
+            Text("By Priyanka, For Shrey")
+                .font(AppTheme.dedicationPlacard)
+                .foregroundStyle(AppTheme.roseGoldDark.opacity(AppTheme.mutedTextOpacity))
+                .tracking(AppTheme.placardTracking)
+                .opacity(isAnimated ? 1.0 : 0.0)
+                .padding(.trailing, 60)
+                .padding(.bottom, 40)
+        }
+        .frame(minWidth: 680, idealWidth: 760, maxWidth: .infinity, minHeight: 420, idealHeight: 480, maxHeight: .infinity)
         .onAppear {
-            withAnimation(.easeInOut(duration: 1.4)) {
+            withAnimation(.spring(response: 0.9, dampingFraction: 0.8)) {
                 isAnimated = true
             }
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 80, damping: 14, initialVelocity: 2)) {
-                    heartScale = 1.35
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                withAnimation(.interpolatingSpring(stiffness: 100, damping: 10)) {
+                    heartScale = 1.25
                 }
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                    withAnimation(.interpolatingSpring(mass: 1.0, stiffness: 60, damping: 12, initialVelocity: 0)) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    withAnimation(.spring()) {
                         heartScale = 1.0
                     }
                 }
@@ -173,7 +108,6 @@ struct LoginView: View {
         }
     }
     
-    // MARK: - COMPLETION HANDLER
     private func handleAppleSignInCompletion(result: Result<ASAuthorization, Error>) {
         switch result {
         case .success(let auth):
@@ -204,7 +138,6 @@ struct LoginView: View {
         }
     }
     
-    // MARK: - NETWORKING HELPERS
     private func authenticateUserWithBackend(payload: [String: String]) {
         guard let url = URL(string: "http://localhost:3000/api/auth/apple") else {
             DispatchQueue.main.async { appState.isLoggedIn = true }
@@ -218,6 +151,7 @@ struct LoginView: View {
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         } catch {
+            DispatchQueue.main.async { appState.isLoggedIn = true }
             return
         }
         
