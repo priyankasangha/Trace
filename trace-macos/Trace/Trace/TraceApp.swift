@@ -14,7 +14,7 @@ struct TraceApp: App {
     
     var body: some Scene {
         WindowGroup {
-            CreateJourneySheet()
+            JourneysViews()
                 .environment(appState)
                 .background(WindowConfigurator())
         }
