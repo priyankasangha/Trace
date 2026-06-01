@@ -17,11 +17,11 @@ struct CreateJourneySheet: View {
     // Timeline Date Architecture (Optional Ints for Native Placeholders)
     @State private var startDay: Int? = 1
     @State private var startMonth: Int? = 1
-    @State private var startYear: Int? = Calendar.current.component(.year, from: Date())
+    @State private var startYear: Int? = 2026
     
     @State private var endDay: Int? = 1
     @State private var endMonth: Int? = 1
-    @State private var endYear: Int? = Calendar.current.component(.year, from: Date())
+    @State private var endYear: Int? = 2026
     
     @State private var isOngoing: Bool = false
     
@@ -41,7 +41,6 @@ struct CreateJourneySheet: View {
                 }
                 .buttonStyle(.plain)
                 
-                // 💡 DYNAMIC HEADER TITLE UPDATE
                 Text(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "New Timeline" : title)
                     .font(AppTheme.title)
                     .foregroundColor(AppTheme.roseGoldDark)
@@ -59,10 +58,7 @@ struct CreateJourneySheet: View {
                     
                     // SECTION 1: MINIMALIST COVER MEDIA
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Visual Accent")
-                            .font(.system(size: 10, weight: .bold))
-                            .tracking(AppTheme.placardTracking)
-                            .foregroundColor(AppTheme.roseGoldDark)
+                        FormSectionHeader(text: "Visual Accent")
                         
                         CustomFormRow(label: "Cover Photo") {
                             HStack(spacing: 12) {
@@ -119,10 +115,7 @@ struct CreateJourneySheet: View {
                     
                     // SECTION 2: GENERAL METADATA
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("GENERAL")
-                            .font(.system(size: 10, weight: .bold))
-                            .tracking(AppTheme.placardTracking)
-                            .foregroundColor(AppTheme.roseGoldDark)
+                        FormSectionHeader(text: "GENERAL")
                         
                         CustomFormRow(label: "Title") {
                             TextField("Timeline Title", text: $title)
@@ -138,10 +131,7 @@ struct CreateJourneySheet: View {
                     
                     // SECTION 3: TIMELINE TIMESTAMPS
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("DATES")
-                            .font(.system(size: 10, weight: .bold))
-                            .tracking(AppTheme.placardTracking)
-                            .foregroundColor(AppTheme.roseGoldDark)
+                        FormSectionHeader(text: "DATES")
                         
                         CustomFormRow(label: "Start Date") {
                             CustomDatePickerRow(day: $startDay, month: $startMonth, year: $startYear)
@@ -150,6 +140,7 @@ struct CreateJourneySheet: View {
                         CustomFormRow(label: "End Date") {
                             CustomDatePickerRow(day: $endDay, month: $endMonth, year: $endYear)
                                 .disabled(isOngoing)
+                                .opacity(isOngoing ? 0.4 : 1.0)
                         }
                         
                         CustomFormRow(label: "Ongoing?") {
@@ -167,7 +158,7 @@ struct CreateJourneySheet: View {
                                         } else {
                                             endDay = 1
                                             endMonth = 1
-                                            endYear = Calendar.current.component(.year, from: Date())
+                                            endYear = 2026
                                         }
                                     }
                                 
@@ -181,10 +172,7 @@ struct CreateJourneySheet: View {
                     
                     // SECTION 4: COLLABORATORS
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("COLLABORATORS")
-                            .font(.system(size: 10, weight: .bold))
-                            .tracking(AppTheme.placardTracking)
-                            .foregroundColor(AppTheme.roseGoldDark)
+                        FormSectionHeader(text: "COLLABORATORS")
                         
                         CustomFormRow(label: "Search Users") {
                             VStack(alignment: .leading, spacing: 8) {
@@ -265,149 +253,60 @@ struct CreateJourneySheet: View {
 }
 
 // ==========================================
-// 2. STYLED NATIVE DROPDOWN SELECTORS
+// 2. SUPPORTING SUBVIEWS & UTILITIES
 // ==========================================
+
+/// Custom row element matching the design architecture requirements
 struct CustomDatePickerRow: View {
     @Binding var day: Int?
     @Binding var month: Int?
     @Binding var year: Int?
     
-    private var yearRange: [Int] {
-        let currentYear = Calendar.current.component(.year, from: Date())
-        return Array((currentYear - 20)...(currentYear + 10))
-    }
-    
     var body: some View {
         HStack(spacing: 8) {
-            Picker("", selection: $day) {
-                if day == nil { Text("DD").tag(Int?.none) }
-                ForEach(1...31, id: \.self) { d in
-                    Text(String(format: "%02d", d)).tag(Int?.some(d))
+            // Year Selector
+            Picker("Year", selection: Binding(
+                get: { year ?? 2026 },
+                set: { year = $0 }
+            )) {
+                ForEach(1900...2100, id: \.self) { y in
+                    Text(String(y)).tag(y)
                 }
             }
             .pickerStyle(.menu)
-            .controlSize(.regular)
             .labelsHidden()
             .fixedSize()
             
-            Picker("", selection: $month) {
-                if month == nil { Text("MM").tag(Int?.none) }
+            // Month Selector
+            Picker("Month", selection: Binding(
+                get: { month ?? 1 },
+                set: { month = $0 }
+            )) {
                 ForEach(1...12, id: \.self) { m in
-                    Text(String(format: "%02d", m)).tag(Int?.some(m))
+                    Text(Calendar.current.shortMonthSymbols[m - 1]).tag(m)
                 }
             }
             .pickerStyle(.menu)
-            .controlSize(.regular)
             .labelsHidden()
             .fixedSize()
             
-            Picker("", selection: $year) {
-                if year == nil { Text("YYYY").tag(Int?.none) }
-                ForEach(yearRange, id: \.self) { y in
-                    Text(String(y)).tag(Int?.some(y))
+            // Day Selector
+            Picker("Day", selection: Binding(
+                get: { day ?? 1 },
+                set: { day = $0 }
+            )) {
+                ForEach(1...31, id: \.self) { d in
+                    Text(String(format: "%02d", d)).tag(d)
                 }
             }
             .pickerStyle(.menu)
-            .controlSize(.regular)
             .labelsHidden()
             .fixedSize()
-            
-            Spacer()
         }
     }
 }
 
-extension View {
-    func styledInput() -> some View {
-        self
-            .textFieldStyle(.plain)
-            .font(AppTheme.body)
-            .foregroundColor(AppTheme.primaryText)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
-            .background(Color(nsColor: .controlBackgroundColor))
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(AppTheme.primaryText.opacity(0.08), lineWidth: AppTheme.thinLineWidth)
-            )
-    }
-}
-
-struct CustomFormRow<Content: View>: View {
-    var label: String
-    var content: Content
-    
-    init(label: String, @ViewBuilder content: () -> Content) {
-        self.label = label
-        self.content = content()
-    }
-    
-    var body: some View {
-        HStack(alignment: .center, spacing: 16) {
-            Text(label)
-                .font(AppTheme.subtitle)
-                .foregroundColor(AppTheme.primaryText.opacity(AppTheme.accentOpacity))
-                .frame(width: 100, alignment: .leading)
-            
-            content
-                .frame(maxWidth: .infinity)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
-
-// ==========================================
-// 3. APPKIT NATIVE NSSEARCHFIELD
-// ==========================================
-struct NativeSearchField: NSViewRepresentable {
-    @Binding var text: String
-    var placeholder: String = ""
-    var onCommit: () -> Void
-    
-    func makeNSView(context: Context) -> NSSearchField {
-        let searchField = NSSearchField()
-        searchField.placeholderString = placeholder
-        searchField.delegate = context.coordinator
-        searchField.font = .systemFont(ofSize: 12)
-        
-        searchField.target = context.coordinator
-        searchField.action = #selector(Coordinator.textCommitted)
-        return searchField
-    }
-    
-    func updateNSView(_ nsView: NSSearchField, context: Context) {
-        if nsView.stringValue != text {
-            nsView.stringValue = text
-        }
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, NSSearchFieldDelegate {
-        var parent: NativeSearchField
-        
-        init(_ parent: NativeSearchField) {
-            self.parent = parent
-        }
-        
-        @objc func textCommitted() {
-            parent.onCommit()
-        }
-        
-        func controlTextDidChange(_ obj: Notification) {
-            if let searchField = obj.object as? NSSearchField {
-                parent.text = searchField.stringValue
-            }
-        }
-    }
-}
-
-// ==========================================
-// 4. FLOW LAYOUT CONFORMANCE
-// ==========================================
+/// A native SwiftUI implementation of a wrapping tag layout context
 struct FlowLayout: Layout {
     var spacing: CGFloat
     
@@ -415,45 +314,40 @@ struct FlowLayout: Layout {
         self.spacing = spacing
     }
     
-    typealias Cache = ()
-    
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) -> CGSize {
-        let width = proposal.width ?? 300
-        var height: CGFloat = 0
-        var currentX: CGFloat = 0
-        var currentY: CGFloat = 0
-        var rowHeight: CGFloat = 0
-        
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if currentX + size.width > width {
-                currentX = 0
-                currentY += rowHeight + spacing
-                rowHeight = 0
-            }
-            rowHeight = max(rowHeight, size.height)
-            currentX += size.width + spacing
-        }
-        height = currentY + rowHeight
-        return CGSize(width: width, height: height)
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = handleLayout(proposal: proposal, subviews: subviews)
+        return result.size
     }
     
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Cache) {
-        var currentX: CGFloat = bounds.minX
-        var currentY: CGFloat = bounds.minY
-        var rowHeight: CGFloat = 0
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = handleLayout(proposal: proposal, subviews: subviews)
+        for (index, coordinate) in result.positions.enumerated() {
+            subviews[index].place(at: CGPoint(x: bounds.minX + coordinate.x, y: bounds.minY + coordinate.y), proposal: .unspecified)
+        }
+    }
+    
+    private func handleLayout(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, positions: [CGPoint]) {
+        let maxWidth = proposal.width ?? .infinity
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var highestInRow: CGFloat = 0
+        var positions: [CGPoint] = []
         
         for subview in subviews {
             let size = subview.sizeThatFits(.unspecified)
-            if currentX + size.width > bounds.maxX {
-                currentX = bounds.minX
-                currentY += rowHeight + spacing
-                rowHeight = 0
+            if currentX + size.width > maxWidth && currentX > 0 {
+                currentX = 0
+                currentY += highestInRow + spacing
+                highestInRow = 0
             }
-            subview.place(at: CGPoint(x: currentX, y: currentY), proposal: .unspecified)
-            rowHeight = max(rowHeight, size.height)
+            positions.append(CGPoint(x: currentX, y: currentY))
+            highestInRow = max(highestInRow, size.height)
             currentX += size.width + spacing
         }
+        
+        let totalHeight = currentY + highestInRow
+        let totalWidth = proposal.width ?? currentX
+        return (CGSize(width: totalWidth, height: totalHeight), positions)
     }
 }
 
