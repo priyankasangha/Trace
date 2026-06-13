@@ -14,7 +14,7 @@ struct TraceApp: App {
     
     var body: some Scene {
         WindowGroup {
-            CreateEventSheet()
+            TimelineCanvasView(journeyTitle: "fake title", journeyDescription: "fake description")
                 .environment(appState)
                 .background(WindowConfigurator())
         }
