@@ -31,7 +31,72 @@ extension NSColor {
 }
 
 // =========================================================================
-// 2. TIMELINE CANVAS VIEW WITH HIGH-AESTHETIC HERO ARENA
+// 2. ATTACHED DATA STRUCTURE STUB
+// =========================================================================
+struct TimelineEventStub: Identifiable {
+    let id = UUID()
+    let category: String
+    let title: String
+    let dateString: String
+    let description: String
+    let imageName: String
+}
+
+// =========================================================================
+// 3. BOUNDED SIDE ALIGNMENT ROW
+// =========================================================================
+struct BoundedVerticalMilestoneRow: View {
+    let event: TimelineEventStub
+    let isLeftAligned: Bool
+    
+    private let contentBlockWidth: CGFloat = 280
+    private let horizontalLineLength: CGFloat = 100
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            
+            // COLUMN 1: LEFT WING AREA
+            HStack(spacing: 0) {
+                if isLeftAligned {
+                    Spacer()
+                    EventBlock(event: event)
+                    
+                    Rectangle()
+                        .fill(AppTheme.roseGoldLight.opacity(0.3))
+                        .frame(width: horizontalLineLength, height: 1.5)
+                        .offset(y: -106)
+                } else {
+                    Spacer()
+                }
+            }
+            .frame(width: contentBlockWidth + horizontalLineLength)
+            
+            // COLUMN 2: CENTER SPINE ANCHOR NODE
+            Color.clear
+                .frame(width: 2)
+            
+            // COLUMN 3: RIGHT WING AREA
+            HStack(spacing: 0) {
+                if !isLeftAligned {
+                    Rectangle()
+                        .fill(AppTheme.roseGoldLight.opacity(0.3))
+                        .frame(width: horizontalLineLength, height: 1.5)
+                        .offset(y: -106)
+                    
+                    EventBlock(event: event)
+                    Spacer()
+                } else {
+                    Spacer()
+                }
+            }
+            .frame(width: contentBlockWidth + horizontalLineLength)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// =========================================================================
+// 4. TIMELINE CANVAS VIEW WITH HIGH-AESTHETIC HERO ARENA
 // =========================================================================
 struct TimelineCanvasView: View {
     let journeyTitle: String
@@ -75,13 +140,13 @@ struct TimelineCanvasView: View {
         VStack(spacing: 0) {
             
             // =================================================================
-            // REDESIGNED: IMMERSIVE HERO IDENTITY HEADER
+            // IMMERSIVE HERO IDENTITY HEADER
             // =================================================================
             VStack(alignment: .leading, spacing: 28) {
                 
                 HStack(alignment: .top, spacing: 32) {
                     
-                    // CINEMATIC MONOGRAM IDENTITY BADGE (Expanded Profile Footprint)
+                    // CINEMATIC MONOGRAM IDENTITY BADGE
                     ZStack {
                         Circle()
                             .fill(AppTheme.roseGoldDark.opacity(0.08))
@@ -108,7 +173,7 @@ struct TimelineCanvasView: View {
                         
                         VStack(alignment: .leading, spacing: 6) {
                             Text(journeyTitle)
-                                .font(.system(size: 56, weight: .bold, design: .serif)) // Maximized scale
+                                .font(.system(size: 56, weight: .bold, design: .serif))
                                 .foregroundColor(AppTheme.roseGoldDark)
                                 .shadow(color: AppTheme.roseGoldDark.opacity(0.05), radius: 2, x: 0, y: 2)
                             
@@ -142,7 +207,7 @@ struct TimelineCanvasView: View {
                     .buttonStyle(.plain)
                 }
                 
-                // DATA STRUCTURAL LINE MATRIX (Eats up dead workspace layout whitespace)
+                // DATA STRUCTURAL LINE MATRIX
                 HStack(spacing: 24) {
                     HStack(spacing: 6) {
                         Circle().fill(AppTheme.roseGoldDark).frame(width: 6, height: 6)
@@ -206,142 +271,7 @@ struct TimelineCanvasView: View {
 }
 
 // =========================================================================
-// 3. BOUNDED SIDE ALIGNMENT ROW
-// =========================================================================
-struct BoundedVerticalMilestoneRow: View {
-    let event: TimelineEventStub
-    let isLeftAligned: Bool
-    
-    private let contentBlockWidth: CGFloat = 280
-    private let horizontalLineLength: CGFloat = 100
-    
-    var body: some View {
-        HStack(spacing: 0) {
-            
-            // COLUMN 1: LEFT WING AREA
-            HStack(spacing: 0) {
-                if isLeftAligned {
-                    Spacer()
-                    MilestoneBlock(event: event)
-                    
-                    Rectangle()
-                        .fill(AppTheme.roseGoldLight.opacity(0.3))
-                        .frame(width: horizontalLineLength, height: 1.5)
-                        .offset(y: -106)
-                } else {
-                    Spacer()
-                }
-            }
-            .frame(width: contentBlockWidth + horizontalLineLength)
-            
-            // COLUMN 2: CENTER SPINE ANCHOR NODE
-            Color.clear
-                .frame(width: 2)
-            
-            // COLUMN 3: RIGHT WING AREA
-            HStack(spacing: 0) {
-                if !isLeftAligned {
-                    Rectangle()
-                        .fill(AppTheme.roseGoldLight.opacity(0.3))
-                        .frame(width: horizontalLineLength, height: 1.5)
-                        .offset(y: -106)
-                    
-                    MilestoneBlock(event: event)
-                    Spacer()
-                } else {
-                    Spacer()
-                }
-            }
-            .frame(width: contentBlockWidth + horizontalLineLength)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
-
-// =========================================================================
-// 4. METICULOUS DASHBOARD-CARD MILESTONE BLOCK
-// =========================================================================
-struct MilestoneBlock: View {
-    let event: TimelineEventStub
-    
-    var body: some View {
-        VStack(alignment: .center, spacing: 24) {
-            
-            // MASSIVE HOVERING ICON FRAME
-            ZStack {
-                Circle()
-                    .fill(AppTheme.roseGoldLight.opacity(0.08))
-                
-                Image(systemName: event.imageName)
-                    .font(.system(size: 46))
-                    .foregroundColor(AppTheme.roseGoldDark.opacity(0.8))
-            }
-            .frame(width: 200, height: 200)
-            .clipShape(Circle())
-            .overlay(
-                Circle()
-                    .stroke(AppTheme.roseGoldLight.opacity(0.35), lineWidth: 1.5)
-            )
-            
-            // MODULAR CARD BASE
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text(event.category)
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(AppTheme.roseGoldDark)
-                        .tracking(1.5)
-                    
-                    Spacer()
-                    
-                    Text(event.dateString)
-                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                        .foregroundColor(AppTheme.primaryText.opacity(0.4))
-                }
-                
-                Divider().opacity(0.1)
-                
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(event.title)
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(AppTheme.primaryText)
-                        .fixedSize(horizontal: false, vertical: true)
-                    
-                    Text(event.description)
-                        .font(.system(size: 12))
-                        .foregroundColor(AppTheme.primaryText.opacity(0.6))
-                        .lineLimit(3)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .padding(18)
-            .background(AppThemes.cardBackground)
-            .cornerRadius(16)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(AppTheme.roseGoldLight.opacity(0.25), lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.02), radius: 8, x: 0, y: 4)
-            .frame(width: 280)
-        }
-        .frame(width: 280)
-    }
-}
-
-// =========================================================================
-// 5. ATTACHED DATA STRUCTURE STUB
-// =========================================================================
-struct TimelineEventStub: Identifiable {
-    let id = UUID()
-    let category: String
-    let title: String
-    let dateString: String
-    let description: String
-    let imageName: String
-}
-
-// =========================================================================
-// 6. CANVAS RENDERING PREVIEW WINDOW
+// 5. CANVAS RENDERING PREVIEW WINDOW
 // =========================================================================
 #Preview {
     TimelineCanvasView(
