@@ -4,8 +4,10 @@ import AppKit
 // =========================================================================
 // 1. GLOBAL APP THEME CORES
 // =========================================================================
+struct AppThemes {
+    static let cardBackground = Color.white.opacity(0.65) // Translucent dashboard card backing
+}
 
-// Extension to cleanly parse your premium hex strings natively on macOS
 extension NSColor {
     convenience init?(hex: String) {
         let r, g, b: CGFloat
@@ -29,27 +31,29 @@ extension NSColor {
 }
 
 // =========================================================================
-// 2. MAIN VERTICAL TIMELINE CANVAS VIEW
+// 2. TIMELINE CANVAS VIEW WITH HIGH-AESTHETIC HERO ARENA
 // =========================================================================
 struct TimelineCanvasView: View {
     let journeyTitle: String
     let journeyDescription: String
     
-    // Core Array utilizing the backend model structure below
     @State private var sampleEvents: [TimelineEventStub] = [
         TimelineEventStub(
+            category: "ARCHITECTURE",
             title: "Project Conception Blueprint",
             dateString: "MAY 01, 2026",
             description: "Initial outline of architecture layers written down on paper.",
             imageName: "doc.text.image"
         ),
         TimelineEventStub(
+            category: "DATABASE",
             title: "Database Schema Finalized",
             dateString: "MAY 31, 2026",
             description: "Mapped out all core models and attributes natively in Prisma.",
             imageName: "externaldrive.badge.checkmark"
         ),
         TimelineEventStub(
+            category: "INTERFACE",
             title: "First Fluid UI Prototype",
             dateString: "JUN 12, 2026",
             description: "Successfully rendered fluid macOS windows and basic sheets.",
@@ -57,62 +61,142 @@ struct TimelineCanvasView: View {
         )
     ]
     
-    @State private var isPresentingCreateEvent: Bool = false
+    private var initials: String {
+        let words = journeyTitle.components(separatedBy: .whitespacesAndNewlines)
+        let cleanWords = words.filter { !$0.isEmpty }
+        if cleanWords.count >= 2 {
+            return String((cleanWords[0].first ?? " ").uppercased() + (cleanWords[1].first ?? " ").uppercased())
+        } else {
+            return String(journeyTitle.prefix(2)).uppercased()
+        }
+    }
     
     var body: some View {
         VStack(spacing: 0) {
             
-            // NATIVE MAC APP BAR HEADER
-            HStack(alignment: .center) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(journeyTitle)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(AppTheme.roseGoldDark)
+            // =================================================================
+            // REDESIGNED: IMMERSIVE HERO IDENTITY HEADER
+            // =================================================================
+            VStack(alignment: .leading, spacing: 28) {
+                
+                HStack(alignment: .top, spacing: 32) {
                     
-                    if !journeyDescription.isEmpty {
-                        Text(journeyDescription)
-                            .font(.system(size: 11))
-                            .foregroundColor(AppTheme.primaryText.opacity(0.6))
+                    // CINEMATIC MONOGRAM IDENTITY BADGE (Expanded Profile Footprint)
+                    ZStack {
+                        Circle()
+                            .fill(AppTheme.roseGoldDark.opacity(0.08))
+                        
+                        Text(initials)
+                            .font(.system(size: 32, weight: .light, design: .serif))
+                            .foregroundColor(AppTheme.roseGoldDark)
+                            .tracking(1)
                     }
-                }
-                
-                Spacer()
-                
-                Button(action: { isPresentingCreateEvent = true }) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 84, height: 84)
+                    .overlay(
+                        Circle()
+                            .stroke(AppTheme.roseGoldLight.opacity(0.3), lineWidth: 1)
+                    )
+                    
+                    // EXPANDED BRANDING TYPOGRAPHY ENGINE
+                    VStack(alignment: .leading, spacing: 10) {
+                        
+                        // Editorial Context Label
+                        Text("ACTIVE CONTEXT TIMELINE")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(AppTheme.roseGoldDark)
+                            .tracking(3.5)
+                        
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(journeyTitle)
+                                .font(.system(size: 56, weight: .bold, design: .serif)) // Maximized scale
+                                .foregroundColor(AppTheme.roseGoldDark)
+                                .shadow(color: AppTheme.roseGoldDark.opacity(0.05), radius: 2, x: 0, y: 2)
+                            
+                            if !journeyDescription.isEmpty {
+                                Text(journeyDescription)
+                                    .font(.system(size: 15, weight: .medium, design: .serif))
+                                    .italic()
+                                    .foregroundColor(AppTheme.primaryText.opacity(0.55))
+                            }
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    // HEADER ACTION COMPONENT
+                    Button(action: {}) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 14, weight: .bold))
+                            Text("NEW MILESTONE")
+                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                .tracking(1)
+                        }
                         .foregroundColor(.white)
-                        .frame(width: 28, height: 28)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
                         .background(AppTheme.roseGoldDark)
-                        .clipShape(Circle())
+                        .cornerRadius(24)
+                        .shadow(color: AppTheme.roseGoldDark.opacity(0.2), radius: 8, x: 0, y: 4)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-                .help("Add New Event Milestone")
+                
+                // DATA STRUCTURAL LINE MATRIX (Eats up dead workspace layout whitespace)
+                HStack(spacing: 24) {
+                    HStack(spacing: 6) {
+                        Circle().fill(AppTheme.roseGoldDark).frame(width: 6, height: 6)
+                        Text("\(sampleEvents.count) TOTAL TRACKED ENGINES")
+                    }
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(AppTheme.roseGoldDark)
+                    .tracking(1)
+                    
+                    Rectangle()
+                        .fill(AppTheme.roseGoldLight.opacity(0.25))
+                        .frame(width: 1, height: 14)
+                    
+                    Text("ENGINEERING CANVAS METADATA PLATFORM")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(AppTheme.primaryText.opacity(0.35))
+                        .tracking(2)
+                    
+                    Spacer()
+                }
+                .padding(.top, 8)
             }
-            .padding(.horizontal, 32)
-            .padding(.vertical, 20)
-            .background(AppTheme.primaryBackground)
+            .padding(.horizontal, 64)
+            .padding(.vertical, 48)
+            .background(
+                AppThemes.cardBackground
+                    .ignoresSafeArea()
+            )
+            .overlay(
+                VStack {
+                    Spacer()
+                    Rectangle()
+                        .fill(AppTheme.roseGoldLight.opacity(0.2))
+                        .frame(height: 1)
+                }
+            )
             
-            Divider().opacity(0.15)
-            
-            // SCROLLABLE TIMELINE STREAM
+            // TIMELINE CANVAS STREAM
             ScrollView(.vertical, showsIndicators: true) {
                 ZStack(alignment: .top) {
                     
-                    // Central Tracking Axis Line
+                    // Central Axis Tracking Spine
                     Rectangle()
-                        .fill(AppTheme.roseGoldLight.opacity(0.4))
+                        .fill(AppTheme.roseGoldLight.opacity(0.3))
                         .frame(width: 2)
-                        .padding(.vertical, 40)
+                        .padding(.vertical, 60)
                     
-                    // Iterative Content Rows
-                    VStack(spacing: 56) {
+                    VStack(spacing: 110) {
                         ForEach(Array(sampleEvents.enumerated()), id: \.offset) { index, event in
                             let isLeftAligned = index % 2 == 0
-                            VerticalMilestoneRow(event: event, isLeftAligned: isLeftAligned)
+                            BoundedVerticalMilestoneRow(event: event, isLeftAligned: isLeftAligned)
                         }
                     }
-                    .padding(.vertical, 40)
+                    .padding(.vertical, 60)
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -122,99 +206,134 @@ struct TimelineCanvasView: View {
 }
 
 // =========================================================================
-// 3. ALTERNATING MILESTONE STRUCTURAL ROW
+// 3. BOUNDED SIDE ALIGNMENT ROW
 // =========================================================================
-struct VerticalMilestoneRow: View {
+struct BoundedVerticalMilestoneRow: View {
     let event: TimelineEventStub
     let isLeftAligned: Bool
     
+    private let contentBlockWidth: CGFloat = 280
+    private let horizontalLineLength: CGFloat = 100
+    
     var body: some View {
         HStack(spacing: 0) {
-            if isLeftAligned {
-                // Content Left | Center Spine | Balanced Empty Spacer Right
-                MilestoneBlock(event: event, isLeftAligned: true)
-                Spacer().frame(width: 240)
-                
-            } else {
-                // Balanced Empty Spacer Left | Center Spine | Content Right
-                Spacer().frame(width: 240)
-                MilestoneBlock(event: event, isLeftAligned: false)
+            
+            // COLUMN 1: LEFT WING AREA
+            HStack(spacing: 0) {
+                if isLeftAligned {
+                    Spacer()
+                    MilestoneBlock(event: event)
+                    
+                    Rectangle()
+                        .fill(AppTheme.roseGoldLight.opacity(0.3))
+                        .frame(width: horizontalLineLength, height: 1.5)
+                        .offset(y: -106)
+                } else {
+                    Spacer()
+                }
             }
+            .frame(width: contentBlockWidth + horizontalLineLength)
+            
+            // COLUMN 2: CENTER SPINE ANCHOR NODE
+            Color.clear
+                .frame(width: 2)
+            
+            // COLUMN 3: RIGHT WING AREA
+            HStack(spacing: 0) {
+                if !isLeftAligned {
+                    Rectangle()
+                        .fill(AppTheme.roseGoldLight.opacity(0.3))
+                        .frame(width: horizontalLineLength, height: 1.5)
+                        .offset(y: -106)
+                    
+                    MilestoneBlock(event: event)
+                    Spacer()
+                } else {
+                    Spacer()
+                }
+            }
+            .frame(width: contentBlockWidth + horizontalLineLength)
         }
         .frame(maxWidth: .infinity)
     }
 }
 
 // =========================================================================
-// 4. MILESTONE BLOCK (CIRCLE PHOTOGRAPHY + CAPTIONS)
+// 4. METICULOUS DASHBOARD-CARD MILESTONE BLOCK
 // =========================================================================
 struct MilestoneBlock: View {
     let event: TimelineEventStub
-    let isLeftAligned: Bool
-    
-    // Exact geometric math calculation bridging center of circle to center spine
-    private let lineLength: CGFloat = 120
     
     var body: some View {
-        VStack(alignment: .center, spacing: 14) {
+        VStack(alignment: .center, spacing: 24) {
             
-            // PHOTO IMAGE FRAME
+            // MASSIVE HOVERING ICON FRAME
             ZStack {
                 Circle()
-                    .fill(AppTheme.roseGoldLight.opacity(0.15))
+                    .fill(AppTheme.roseGoldLight.opacity(0.08))
                 
                 Image(systemName: event.imageName)
-                    .font(.system(size: 32))
-                    .foregroundColor(AppTheme.roseGoldDark.opacity(0.7))
+                    .font(.system(size: 46))
+                    .foregroundColor(AppTheme.roseGoldDark.opacity(0.8))
             }
-            .frame(width: 140, height: 140)
+            .frame(width: 200, height: 200)
             .clipShape(Circle())
             .overlay(
                 Circle()
-                    .stroke(AppTheme.roseGoldLight.opacity(0.5), lineWidth: 1)
-            )
-            // THE UNDERLAYING ANCHOR LINE CODES
-            .background(
-                GeometryReader { geo in
-                    Rectangle()
-                        .fill(AppTheme.roseGoldLight.opacity(0.4))
-                        .frame(width: lineLength, height: 1.5)
-                        .position(
-                            x: isLeftAligned ? geo.size.width / 2 + lineLength / 2 : geo.size.width / 2 - lineLength / 2,
-                            y: geo.size.height / 2
-                        )
-                }
+                    .stroke(AppTheme.roseGoldLight.opacity(0.35), lineWidth: 1.5)
             )
             
-            // METADATA LABELS (Sits safely below circle, completely unbothered by line math)
-            VStack(alignment: .center, spacing: 4) {
-                Text(event.dateString)
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundColor(AppTheme.roseGoldDark)
+            // MODULAR CARD BASE
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text(event.category)
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(AppTheme.roseGoldDark)
+                        .tracking(1.5)
+                    
+                    Spacer()
+                    
+                    Text(event.dateString)
+                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                        .foregroundColor(AppTheme.primaryText.opacity(0.4))
+                }
                 
-                Text(event.title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(AppTheme.primaryText)
-                    .multilineTextAlignment(.center)
+                Divider().opacity(0.1)
                 
-                Text(event.description)
-                    .font(.system(size: 11))
-                    .foregroundColor(AppTheme.primaryText.opacity(0.55))
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(event.title)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(AppTheme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                    
+                    Text(event.description)
+                        .font(.system(size: 12))
+                        .foregroundColor(AppTheme.primaryText.opacity(0.6))
+                        .lineLimit(3)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            .frame(width: 200)
+            .padding(18)
+            .background(AppThemes.cardBackground)
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(AppTheme.roseGoldLight.opacity(0.25), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.02), radius: 8, x: 0, y: 4)
+            .frame(width: 280)
         }
-        .frame(width: 240)
+        .frame(width: 280)
     }
 }
 
 // =========================================================================
-// 5. NATIVE BACKEND MODEL COMPATIBILITY STUB
+// 5. ATTACHED DATA STRUCTURE STUB
 // =========================================================================
 struct TimelineEventStub: Identifiable {
     let id = UUID()
+    let category: String
     let title: String
     let dateString: String
     let description: String
@@ -226,8 +345,8 @@ struct TimelineEventStub: Identifiable {
 // =========================================================================
 #Preview {
     TimelineCanvasView(
-        journeyTitle: "Trace Engineering Canvas",
-        journeyDescription: "By Priyanka, For Shrey"
+        journeyTitle: "Trace Architecture",
+        journeyDescription: "By Priyanka, For Shrey — An immersive canvas mapping core architectural sprints."
     )
-    .frame(width: 700, height: 650)
+    .frame(width: 1400, height: 950)
 }
