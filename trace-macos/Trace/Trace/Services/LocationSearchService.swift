@@ -12,10 +12,8 @@ class LocationSearchService: NSObject, ObservableObject, MKLocalSearchCompleterD
     override init() {
         super.init()
         completer.delegate = self
-        // Limits results to natural landmarks, addresses, or structural places
         completer.resultTypes = [.pointOfInterest, .address]
         
-        // Debounce input text stream to avoid choking API rate limits on fast typing
         $searchQuery
             .debounce(for: .milliseconds(250), scheduler: RunLoop.main)
             .sink { [weak self] query in

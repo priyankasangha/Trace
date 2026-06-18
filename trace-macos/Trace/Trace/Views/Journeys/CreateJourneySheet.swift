@@ -14,7 +14,6 @@ struct CreateJourneySheet: View {
     @State private var participants: [String] = []
     @State private var searchText: String = ""
     
-    // Timeline Date Architecture (Optional Ints for Native Placeholders)
     @State private var startDay: Int? = 1
     @State private var startMonth: Int? = 1
     @State private var startYear: Int? = 2026
@@ -256,7 +255,6 @@ struct CreateJourneySheet: View {
 // 2. SUPPORTING SUBVIEWS & UTILITIES
 // ==========================================
 
-/// Custom row element matching the design architecture requirements
 struct CustomDatePickerRow: View {
     @Binding var day: Int?
     @Binding var month: Int?
@@ -264,7 +262,6 @@ struct CustomDatePickerRow: View {
     
     var body: some View {
         HStack(spacing: 8) {
-            // Year Selector
             Picker("Year", selection: Binding(
                 get: { year ?? 2026 },
                 set: { year = $0 }
@@ -277,7 +274,6 @@ struct CustomDatePickerRow: View {
             .labelsHidden()
             .fixedSize()
             
-            // Month Selector
             Picker("Month", selection: Binding(
                 get: { month ?? 1 },
                 set: { month = $0 }
@@ -290,7 +286,6 @@ struct CustomDatePickerRow: View {
             .labelsHidden()
             .fixedSize()
             
-            // Day Selector
             Picker("Day", selection: Binding(
                 get: { day ?? 1 },
                 set: { day = $0 }
@@ -306,7 +301,6 @@ struct CustomDatePickerRow: View {
     }
 }
 
-/// A native SwiftUI implementation of a wrapping tag layout context
 struct FlowLayout: Layout {
     var spacing: CGFloat
     

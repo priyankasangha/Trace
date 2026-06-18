@@ -4,7 +4,6 @@ import MapKit
 struct InlineLocationPicker: View {
     @ObservedObject var searchService: LocationSearchService
     
-    // Parent Schema Context Targets
     @Binding var locationName: String
     @Binding var latitudeString: String
     @Binding var longitudeString: String

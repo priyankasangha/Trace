@@ -4,7 +4,6 @@ import SwiftUI
 // REUSABLE FORM DESIGN SYSTEM UTILITIES
 // ==========================================
 
-/// A standardized header for form sections featuring tracking and the brand's dark rose gold accent.
 struct FormSectionHeader: View {
     let text: String
     
@@ -17,8 +16,6 @@ struct FormSectionHeader: View {
     }
 }
 
-/// A structured form row that enforces an explicit, aligned label width on the left
-/// and projects an un-bounded input view on the right.
 struct FormRow<Content: View>: View {
     let label: String
     let labelWidth: CGFloat
@@ -48,8 +45,6 @@ struct FormRow<Content: View>: View {
 // ==========================================
 
 extension View {
-    /// Applies a subtle, minimalist stroke border designed explicitly for layout forms.
-    /// Renamed to avoid collisions with properties in the main design tokens class.
     func formFieldBorder() -> some View {
         self.overlay(
             RoundedRectangle(cornerRadius: 6)
@@ -63,7 +58,6 @@ extension View {
 // TRACE SYSTEM: SHARED FORM LAYOUT ARCHITECTURE
 // ==========================================
 
-/// A standardized form row that aligns a descriptive label with its input content.
 struct CustomFormRow<Content: View>: View {
     var label: String
     var content: Content
@@ -92,7 +86,6 @@ struct CustomFormRow<Content: View>: View {
 // ==========================================
 
 extension View {
-    /// Applies a unified design token layout for text inputs, backgrounds, and subtle borders.
     func styledInput() -> some View {
         self
             .textFieldStyle(.plain)

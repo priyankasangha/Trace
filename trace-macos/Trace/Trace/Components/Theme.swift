@@ -1,22 +1,19 @@
 import SwiftUI
 
-// ==========================================
-// 1. THEME DESIGN TOKENS
-// ==========================================
 struct AppTheme {
     // ------------------------------------------
     // A. COLORS
     // ------------------------------------------
     
-    // NATIVE MAC FIX: Uses the exact system canvas color used by first-party apps like Notes and Finder
     static let primaryBackground = Color.dynamic(
         light: Color(nsColor: .windowBackgroundColor),
         dark: Color(nsColor: .windowBackgroundColor)
     )
     
+    static let cardBackground = Color.white.opacity(0.65)
+    
     static let blurViewBackground = Color(hex: "#F5F5F533")
     
-    // Uses standard high-contrast system label colors that guarantee readability
     static let primaryText = Color.dynamic(
         light: Color(nsColor: .labelColor),
         dark: Color(nsColor: .labelColor)
@@ -70,7 +67,6 @@ struct AppTheme {
 // 2. HELPER EXTENSIONS (Hex & Dynamic Support)
 // ==========================================
 extension Color {
-    // 💡 THE COMPILER FIX: 'static' keyword lets you call Color.dynamic on the type safely
     static func dynamic(light: Color, dark: Color) -> Color {
         #if os(macOS)
         return Color(NSColor(name: nil) { appearance in

@@ -1,7 +1,7 @@
 import SwiftUI
 
 // ==========================================
-// 1. DATA MODELS & STATE ARCHITECTURE
+// 1. DATA MODELS
 // ==========================================
 struct JourneyItem: Identifiable {
     let id = UUID()
@@ -20,25 +20,14 @@ struct ActivityLogItem: Identifiable {
 }
 
 // ==========================================
-// 2. MAIN JOURNEYS DASHBOARD VIEW
+// 2. MAIN JOURNEYS INTERFACE (WITH SIDEBAR)
 // ==========================================
 struct JourneysViews: View {
-    @State private var journeys: [JourneyItem] = [
-        JourneyItem(title: "Summer in Europe", description: "Exploring coastal cities, train transfers, and shared highlights.", dateRangeString: "05/12/2026 — Ongoing", collaboratorCount: 3, coverImageName: nil, isOngoing: true),
-        JourneyItem(title: "Trace Architecture Shift", description: "Documenting the transition from full-stack JavaScript to native SwiftUI layout states.", dateRangeString: "04/01/2026 — 05/20/2026", collaboratorCount: 1, coverImageName: nil, isOngoing: false),
-        JourneyItem(title: "Weekend Cabin Trip", description: "Off-grid micro-moments, campfire logs, and soundscapes.", dateRangeString: "05/24/2026 — 05/26/2026", collaboratorCount: 4, coverImageName: nil, isOngoing: false)
-    ]
+    let journeys: [JourneyItem]
+    let recentActivities: [ActivityLogItem] // Passed down for the sidebar
     
-    @State private var recentActivity: [ActivityLogItem] = [
-        ActivityLogItem(message: "Updated Weekend Cabin Trip soundscapes", timestamp: "2m ago"),
-        ActivityLogItem(message: "Shrey added comments to Architecture Shift", timestamp: "1h ago"),
-        ActivityLogItem(message: "Added 3 new nodes to Summer in Europe", timestamp: "Yesterday")
-    ]
-    
-    @State private var showCreateSheet: Bool = false
-    @State private var showFeedbackSheet: Bool = false
-    @State private var footerHeartScale: CGFloat = 1.0
-    @State private var feedbackCardHovered: Bool = false
+    @Binding var showCreateSheet: Bool
+    @Binding var showFeedbackSheet: Bool // Bound to the sidebar's interactive card
     
     private let columns = [
         GridItem(.adaptive(minimum: 240, maximum: 340), spacing: 20)
@@ -46,224 +35,16 @@ struct JourneysViews: View {
     
     var body: some View {
         HSplitView {
+            // SIDEBAR PLACEMENT (LEFT)
+            AppSidebarView(
+                totalTimelinesCount: journeys.count,
+                recentActivities: recentActivities,
+                showFeedbackSheet: $showFeedbackSheet
+            )
             
-            // SIDE PANEL: MINIMALIST PROFILE PLATFORM
-            VStack(spacing: 20) {
-                VStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(AppTheme.roseGoldLight.opacity(0.4))
-                            .frame(width: 68, height: 68)
-                        
-                        Text("PS")
-                            .font(.system(size: 20, weight: .medium, design: .serif))
-                            .foregroundColor(AppTheme.roseGoldDark)
-                    }
-                    .overlay(Circle().stroke(AppTheme.roseGoldBase.opacity(0.5), lineWidth: AppTheme.thinLineWidth))
-                    
-                    VStack(spacing: 3) {
-                        Text("Priyanka Sangha")
-                            .font(AppTheme.title)
-                            .foregroundColor(AppTheme.primaryText)
-                        
-                        Text("Architect & Creator")
-                            .font(AppTheme.appTagline)
-                            .tracking(AppTheme.placardTracking)
-                            .foregroundColor(AppTheme.roseGoldDark)
-                    }
-                }
-                .padding(.vertical, 24)
-                .frame(maxWidth: .infinity)
-                .background(Color(nsColor: .controlBackgroundColor).opacity(0.4))
-                .cornerRadius(12)
-                .fineLineBorder()
-                
-                // QUICK ANALYTICS PLACARD
-                VStack(alignment: .leading, spacing: 14) {
-                    Text("OVERVIEW")
-                        .font(.system(size: 9, weight: .bold))
-                        .tracking(AppTheme.titleTracking)
-                        .foregroundColor(AppTheme.roseGoldDark)
-                    
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(AppTheme.roseGoldDark.opacity(0.5))
-                            .frame(width: 4, height: 4)
-                        Rectangle()
-                            .fill(AppTheme.roseGoldLight.opacity(0.3))
-                            .frame(height: AppTheme.thinLineWidth)
-                        Circle()
-                            .fill(AppTheme.roseGoldDark.opacity(0.5))
-                            .frame(width: 4, height: 4)
-                    }
-                    .padding(.bottom, 2)
-                    
-                    HStack {
-                        Text("Total Timelines")
-                            .font(AppTheme.subtitle)
-                            .foregroundColor(AppTheme.primaryText.opacity(AppTheme.accentOpacity))
-                        Spacer()
-                        Text("\(journeys.count)")
-                            .font(AppTheme.body)
-                            .fontWeight(.semibold)
-                            .foregroundColor(AppTheme.roseGoldDark)
-                    }
-                    
-                    HStack {
-                        Text("Active Contexts")
-                            .font(AppTheme.subtitle)
-                            .foregroundColor(AppTheme.primaryText.opacity(AppTheme.accentOpacity))
-                        Spacer()
-                        Text("1")
-                            .font(AppTheme.body)
-                            .fontWeight(.semibold)
-                            .foregroundColor(AppTheme.roseGoldDark)
-                    }
-                    
-                    HStack {
-                        Text("Shared Spaces")
-                            .font(AppTheme.subtitle)
-                            .foregroundColor(AppTheme.primaryText.opacity(AppTheme.accentOpacity))
-                        Spacer()
-                        Text("2")
-                            .font(AppTheme.body)
-                            .fontWeight(.semibold)
-                            .foregroundColor(AppTheme.roseGoldDark)
-                    }
-                    
-                    HStack {
-                        Text("Pinned Milestones")
-                            .font(AppTheme.subtitle)
-                            .foregroundColor(AppTheme.primaryText.opacity(AppTheme.accentOpacity))
-                        Spacer()
-                        Text("8")
-                            .font(AppTheme.body)
-                            .fontWeight(.semibold)
-                            .foregroundColor(AppTheme.roseGoldDark)
-                    }
-                    
-                    HStack {
-                        Text("Total Contributors")
-                            .font(AppTheme.subtitle)
-                            .foregroundColor(AppTheme.primaryText.opacity(AppTheme.accentOpacity))
-                        Spacer()
-                        Text("5")
-                            .font(AppTheme.body)
-                            .fontWeight(.semibold)
-                            .foregroundColor(AppTheme.roseGoldDark)
-                    }
-                }
-                .padding(16)
-                .background(AppTheme.roseGoldLight.opacity(0.08))
-                .cornerRadius(12)
-                
-                // HIGH-AESTHETIC PORTAL: SHREY'S FEEDBACK CORNER
-                Button(action: { showFeedbackSheet.toggle() }) {
-                    HStack(spacing: 14) {
-                        ZStack {
-                            Circle()
-                                .fill(AppTheme.roseGoldDark.opacity(0.12))
-                                .frame(width: 36, height: 36)
-                            
-                            Image(systemName: "bubble.left.and.bubble.right.fill")
-                                .font(.system(size: 13, weight: .regular))
-                                .foregroundColor(AppTheme.roseGoldDark)
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Shrey's Feedback Corner")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(AppTheme.primaryText)
-                            
-                            Text("Review critiques & system notes")
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(AppTheme.primaryText.opacity(0.5))
-                        }
-                        
-                        Spacer()
-                        
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(AppTheme.roseGoldDark.opacity(0.6))
-                            .offset(x: feedbackCardHovered ? 2 : 0)
-                            .animation(.easeOut(duration: 0.2), value: feedbackCardHovered)
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .background(
-                        AppTheme.roseGoldLight.opacity(feedbackCardHovered ? 0.16 : 0.05)
-                    )
-                    .cornerRadius(12)
-                    .fineLineBorder(color: AppTheme.roseGoldDark.opacity(feedbackCardHovered ? 0.35 : 0.15))
-                    .scaleEffect(feedbackCardHovered ? 1.012 : 1.0)
-                    .animation(.interpolatingSpring(stiffness: 300, damping: 22), value: feedbackCardHovered)
-                }
-                .buttonStyle(.plain)
-                .onHover { hovering in
-                    feedbackCardHovered = hovering
-                }
-                
-                // RECENT ACTIVITY LOG
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("RECENT ACTIVITY")
-                        .font(.system(size: 9, weight: .bold))
-                        .tracking(AppTheme.titleTracking)
-                        .foregroundColor(AppTheme.roseGoldDark)
-                    
-                    VStack(alignment: .leading, spacing: 10) {
-                        ForEach(recentActivity) { log in
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(log.message)
-                                    .font(.system(size: 11))
-                                    .foregroundColor(AppTheme.primaryText.opacity(0.85))
-                                    .lineLimit(1)
-                                
-                                Text(log.timestamp)
-                                    .font(.system(size: 9, weight: .medium))
-                                    .foregroundColor(AppTheme.roseGoldDark.opacity(0.7))
-                            }
-                            
-                            if log.id != recentActivity.last?.id {
-                                Divider()
-                                    .opacity(0.15)
-                            }
-                        }
-                    }
-                }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(nsColor: .controlBackgroundColor).opacity(0.2))
-                .cornerRadius(12)
-                .fineLineBorder()
-                
-                Spacer()
-                
-                // DEDICATION PLACARD FOOTER
-                HStack(spacing: 6) {
-                    Text("By Priyanka, For Shrey")
-                        .font(AppTheme.dedicationPlacard)
-                        .foregroundColor(AppTheme.primaryText.opacity(0.4))
-                    
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 9))
-                        .foregroundColor(AppTheme.roseGoldDark.opacity(0.5))
-                        .scaleEffect(footerHeartScale)
-                }
-                .padding(.bottom, 16)
-                .onHover { hovering in
-                    withAnimation(.interpolatingSpring(stiffness: 120, damping: 8)) {
-                        footerHeartScale = hovering ? 1.3 : 1.0
-                    }
-                }
-            }
-            .padding(.top, AppTheme.windowTopSafetyPadding)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 20)
-            .background(AppTheme.primaryBackground.opacity(0.95))
-            .frame(minWidth: 260, idealWidth: 280, maxWidth: 400)
-            
-            // MAIN WORKSPACE CONTENT CANVAS
+            // MAIN CANVAS WORKSPACE (RIGHT)
             VStack(spacing: 0) {
+                // TOP HEADER CONTROL ROW
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Journeys")
@@ -295,6 +76,7 @@ struct JourneysViews: View {
                 .padding(.top, AppTheme.windowTopSafetyPadding + 12)
                 .padding(.bottom, 24)
                 
+                // GRID CANVAS
                 ScrollView(.vertical, showsIndicators: true) {
                     LazyVGrid(columns: columns, spacing: 24) {
                         ForEach(journeys) { journey in
@@ -307,26 +89,6 @@ struct JourneysViews: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(AppTheme.primaryBackground)
-        }
-        .frame(minWidth: 900, minHeight: 600)
-        .sheet(isPresented: $showCreateSheet) {
-            Text("Create Journey Platform Base Placement")
-                .padding(40)
-        }
-        .sheet(isPresented: $showFeedbackSheet) {
-            VStack(spacing: 20) {
-                Text("Shrey's Feedback Corner")
-                    .font(.system(size: 18, weight: .bold, design: .serif))
-                    .foregroundColor(AppTheme.roseGoldDark)
-                Text("Review space pending context pipelines.")
-                    .font(.system(size: 12))
-                    .foregroundColor(AppTheme.primaryText.opacity(0.6))
-                Button("Dismiss") { showFeedbackSheet.toggle() }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-            }
-            .padding(40)
-            .frame(width: 400, height: 250)
         }
     }
 }
@@ -431,7 +193,17 @@ extension View {
 // 5. PREVIEW CANVAS ANCHOR
 // ==========================================
 #Preview {
-    JourneysViews()
-        .frame(width: 950, height: 650)
-        .background(AppTheme.primaryBackground)
+    JourneysViews(
+        journeys: [
+            JourneyItem(title: "Summer in Europe", description: "Exploring coastal cities, train transfers, and shared highlights.", dateRangeString: "05/12/2026 — Ongoing", collaboratorCount: 3, coverImageName: nil, isOngoing: true),
+            JourneyItem(title: "Trace Architecture Shift", description: "Documenting the transition from JavaScript to native SwiftUI states.", dateRangeString: "04/01/2026 — 05/20/2026", collaboratorCount: 1, coverImageName: nil, isOngoing: false)
+        ],
+        recentActivities: [
+            ActivityLogItem(message: "Updated timeline constraints", timestamp: "Just now"),
+            ActivityLogItem(message: "Shared 'Summer in Europe' context", timestamp: "2 hours ago")
+        ],
+        showCreateSheet: .constant(false),
+        showFeedbackSheet: .constant(false)
+    )
+    .frame(width: 950, height: 650)
 }

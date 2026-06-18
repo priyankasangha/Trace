@@ -2,36 +2,7 @@ import SwiftUI
 import AppKit
 
 // =========================================================================
-// 1. GLOBAL APP THEME CORES
-// =========================================================================
-struct AppThemes {
-    static let cardBackground = Color.white.opacity(0.65) // Translucent dashboard card backing
-}
-
-extension NSColor {
-    convenience init?(hex: String) {
-        let r, g, b: CGFloat
-        if hex.hasPrefix("#") {
-            let start = hex.index(hex.startIndex, offsetBy: 1)
-            let hexColor = String(hex[start...])
-            if hexColor.count == 6 {
-                let scanner = Scanner(string: hexColor)
-                var hexNumber: UInt64 = 0
-                if scanner.scanHexInt64(&hexNumber) {
-                    r = CGFloat((hexNumber & 0xff0000) >> 16) / 255
-                    g = CGFloat((hexNumber & 0x00ff00) >> 8) / 255
-                    b = CGFloat(hexNumber & 0x0000ff) / 255
-                    self.init(red: r, green: g, blue: b, alpha: 1.0)
-                    return
-                }
-            }
-        }
-        return nil
-    }
-}
-
-// =========================================================================
-// 2. ATTACHED DATA STRUCTURE STUB
+// 1. ATTACHED DATA STRUCTURE STUB & MODELS
 // =========================================================================
 struct TimelineEventStub: Identifiable {
     let id = UUID()
@@ -43,45 +14,47 @@ struct TimelineEventStub: Identifiable {
 }
 
 // =========================================================================
-// 3. BOUNDED SIDE ALIGNMENT ROW
+// 2. BOUNDED SIDE ALIGNMENT ROW
 // =========================================================================
 struct BoundedVerticalMilestoneRow: View {
     let event: TimelineEventStub
     let isLeftAligned: Bool
     
     private let contentBlockWidth: CGFloat = 280
-    private let horizontalLineLength: CGFloat = 100
+    private let horizontalLineLength: CGFloat = 60
     
     var body: some View {
         HStack(spacing: 0) {
-            
             // COLUMN 1: LEFT WING AREA
             HStack(spacing: 0) {
                 if isLeftAligned {
                     Spacer()
                     EventBlock(event: event)
                     
+                    // Connected to the precise center-right edge of the block
                     Rectangle()
                         .fill(AppTheme.roseGoldLight.opacity(0.3))
                         .frame(width: horizontalLineLength, height: 1.5)
-                        .offset(y: -106)
                 } else {
                     Spacer()
                 }
             }
             .frame(width: contentBlockWidth + horizontalLineLength)
             
-            // COLUMN 2: CENTER SPINE ANCHOR NODE
-            Color.clear
+            // COLUMN 2: CENTER SPINE ANCHOR NODE (Always vertically centered with connection lines)
+            Circle()
+                .fill(AppTheme.roseGoldBase)
+                .frame(width: 8, height: 8)
+                .background(Circle().stroke(AppTheme.roseGoldLight.opacity(0.5), lineWidth: 4))
                 .frame(width: 2)
             
             // COLUMN 3: RIGHT WING AREA
             HStack(spacing: 0) {
                 if !isLeftAligned {
+                    // Connected to the precise center-left edge of the block
                     Rectangle()
                         .fill(AppTheme.roseGoldLight.opacity(0.3))
                         .frame(width: horizontalLineLength, height: 1.5)
-                        .offset(y: -106)
                     
                     EventBlock(event: event)
                     Spacer()
@@ -96,11 +69,19 @@ struct BoundedVerticalMilestoneRow: View {
 }
 
 // =========================================================================
-// 4. TIMELINE CANVAS VIEW WITH HIGH-AESTHETIC HERO ARENA
+// 3. TIMELINE CANVAS VIEW WITH SPLIT SIDEBAR LAYOUT
 // =========================================================================
 struct TimelineCanvasView: View {
     let journeyTitle: String
     let journeyDescription: String
+    
+    @State private var showFeedbackSheet: Bool = false
+    @State private var mockTotalTimelines = 3
+    @State private var mockActivities: [ActivityLogItem] = [
+        ActivityLogItem(message: "Updated Weekend Cabin Trip soundscapes", timestamp: "2m ago"),
+        ActivityLogItem(message: "Shrey added comments to Architecture Shift", timestamp: "1h ago"),
+        ActivityLogItem(message: "Added 3 new nodes to Summer in Europe", timestamp: "Yesterday")
+    ]
     
     @State private var sampleEvents: [TimelineEventStub] = [
         TimelineEventStub(
@@ -126,157 +107,115 @@ struct TimelineCanvasView: View {
         )
     ]
     
-    private var initials: String {
-        let words = journeyTitle.components(separatedBy: .whitespacesAndNewlines)
-        let cleanWords = words.filter { !$0.isEmpty }
-        if cleanWords.count >= 2 {
-            return String((cleanWords[0].first ?? " ").uppercased() + (cleanWords[1].first ?? " ").uppercased())
-        } else {
-            return String(journeyTitle.prefix(2)).uppercased()
-        }
-    }
-    
     var body: some View {
-        VStack(spacing: 0) {
+        HSplitView {
+            // UNIFIED BRANDING SIDEBAR PLATFORM
+            AppSidebarView(
+                totalTimelinesCount: mockTotalTimelines,
+                recentActivities: mockActivities,
+                showFeedbackSheet: $showFeedbackSheet
+            )
             
-            // =================================================================
-            // IMMERSIVE HERO IDENTITY HEADER
-            // =================================================================
-            VStack(alignment: .leading, spacing: 28) {
-                
-                HStack(alignment: .top, spacing: 32) {
-                    
-                    // CINEMATIC MONOGRAM IDENTITY BADGE
-                    ZStack {
-                        Circle()
-                            .fill(AppTheme.roseGoldDark.opacity(0.08))
-                        
-                        Text(initials)
-                            .font(.system(size: 32, weight: .light, design: .serif))
-                            .foregroundColor(AppTheme.roseGoldDark)
-                            .tracking(1)
-                    }
-                    .frame(width: 84, height: 84)
-                    .overlay(
-                        Circle()
-                            .stroke(AppTheme.roseGoldLight.opacity(0.3), lineWidth: 1)
-                    )
-                    
-                    // EXPANDED BRANDING TYPOGRAPHY ENGINE
-                    VStack(alignment: .leading, spacing: 10) {
-                        
-                        // Editorial Context Label
-                        Text("ACTIVE CONTEXT TIMELINE")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundColor(AppTheme.roseGoldDark)
-                            .tracking(3.5)
-                        
-                        VStack(alignment: .leading, spacing: 6) {
+            // DYNAMIC TIMELINE WORKSPACE CANVAS
+            VStack(spacing: 0) {
+                // CLEANED HERO IDENTITY HEADER
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text(journeyTitle)
-                                .font(.system(size: 56, weight: .bold, design: .serif))
+                                .font(.system(size: 38, weight: .bold, design: .serif))
                                 .foregroundColor(AppTheme.roseGoldDark)
-                                .shadow(color: AppTheme.roseGoldDark.opacity(0.05), radius: 2, x: 0, y: 2)
                             
                             if !journeyDescription.isEmpty {
                                 Text(journeyDescription)
-                                    .font(.system(size: 15, weight: .medium, design: .serif))
+                                    .font(.system(size: 13, weight: .medium, design: .serif))
                                     .italic()
                                     .foregroundColor(AppTheme.primaryText.opacity(0.55))
                             }
                         }
-                    }
-                    
-                    Spacer()
-                    
-                    // HEADER ACTION COMPONENT
-                    Button(action: {}) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "plus")
-                                .font(.system(size: 14, weight: .bold))
-                            Text("NEW MILESTONE")
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                .tracking(1)
+                        
+                        Spacer()
+                        
+                        Button(action: {}) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 11, weight: .bold))
+                                Text("NEW MILESTONE")
+                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    .tracking(0.5)
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(AppTheme.roseGoldDark)
+                            .cornerRadius(20)
+                            .shadow(color: AppTheme.roseGoldDark.opacity(0.15), radius: 6, x: 0, y: 3)
                         }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .background(AppTheme.roseGoldDark)
-                        .cornerRadius(24)
-                        .shadow(color: AppTheme.roseGoldDark.opacity(0.2), radius: 8, x: 0, y: 4)
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
+                    
+                    .padding(.top, 4)
                 }
+                .padding(.horizontal, 40)
+                .padding(.vertical, 32)
+                .background(AppTheme.cardBackground.ignoresSafeArea())
+                .overlay(
+                    VStack {
+                        Spacer()
+                        Rectangle()
+                            .fill(AppTheme.roseGoldLight.opacity(0.2))
+                            .frame(height: 1)
+                    }
+                )
                 
-                // DATA STRUCTURAL LINE MATRIX
-                HStack(spacing: 24) {
-                    HStack(spacing: 6) {
-                        Circle().fill(AppTheme.roseGoldDark).frame(width: 6, height: 6)
-                        Text("\(sampleEvents.count) TOTAL TRACKED ENGINES")
-                    }
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .foregroundColor(AppTheme.roseGoldDark)
-                    .tracking(1)
-                    
-                    Rectangle()
-                        .fill(AppTheme.roseGoldLight.opacity(0.25))
-                        .frame(width: 1, height: 14)
-                    
-                    Text("ENGINEERING CANVAS METADATA PLATFORM")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(AppTheme.primaryText.opacity(0.35))
-                        .tracking(2)
-                    
-                    Spacer()
-                }
-                .padding(.top, 8)
-            }
-            .padding(.horizontal, 64)
-            .padding(.vertical, 48)
-            .background(
-                AppThemes.cardBackground
-                    .ignoresSafeArea()
-            )
-            .overlay(
-                VStack {
-                    Spacer()
-                    Rectangle()
-                        .fill(AppTheme.roseGoldLight.opacity(0.2))
-                        .frame(height: 1)
-                }
-            )
-            
-            // TIMELINE CANVAS STREAM
-            ScrollView(.vertical, showsIndicators: true) {
-                ZStack(alignment: .top) {
-                    
-                    // Central Axis Tracking Spine
-                    Rectangle()
-                        .fill(AppTheme.roseGoldLight.opacity(0.3))
-                        .frame(width: 2)
-                        .padding(.vertical, 60)
-                    
-                    VStack(spacing: 110) {
-                        ForEach(Array(sampleEvents.enumerated()), id: \.offset) { index, event in
-                            let isLeftAligned = index % 2 == 0
-                            BoundedVerticalMilestoneRow(event: event, isLeftAligned: isLeftAligned)
+                // TIMELINE CANVAS STREAM
+                ScrollView(.vertical, showsIndicators: true) {
+                    ZStack(alignment: .top) {
+                        Rectangle()
+                            .fill(AppTheme.roseGoldLight.opacity(0.3))
+                            .frame(width: 1.5)
+                            .padding(.vertical, 40)
+                        
+                        VStack(spacing: 60) {
+                            ForEach(Array(sampleEvents.enumerated()), id: \.offset) { index, event in
+                                let isLeftAligned = index % 2 == 0
+                                BoundedVerticalMilestoneRow(event: event, isLeftAligned: isLeftAligned)
+                            }
                         }
+                        .padding(.vertical, 40)
                     }
-                    .padding(.vertical, 60)
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
+                .background(AppTheme.primaryBackground.opacity(0.98))
             }
-            .background(AppTheme.primaryBackground.opacity(0.98))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(minWidth: 1150, minHeight: 700)
+        .sheet(isPresented: $showFeedbackSheet) {
+            VStack(spacing: 20) {
+                Text("Shrey's Feedback Corner")
+                    .font(.system(size: 18, weight: .bold, design: .serif))
+                    .foregroundColor(AppTheme.roseGoldDark)
+                Text("Review space pending context pipelines.")
+                    .font(.system(size: 12))
+                    .foregroundColor(AppTheme.primaryText.opacity(0.6))
+                Button("Dismiss") { showFeedbackSheet.toggle() }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+            }
+            .padding(40)
+            .frame(width: 400, height: 250)
         }
     }
 }
 
 // =========================================================================
-// 5. CANVAS RENDERING PREVIEW WINDOW
+// 4. CANVAS RENDERING PREVIEW WINDOW
 // =========================================================================
 #Preview {
     TimelineCanvasView(
         journeyTitle: "Trace Architecture",
-        journeyDescription: "By Priyanka, For Shrey — An immersive canvas mapping core architectural sprints."
+        journeyDescription: "Test description"
     )
-    .frame(width: 1400, height: 950)
+    .frame(width: 1300, height: 850)
 }

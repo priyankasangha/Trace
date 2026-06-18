@@ -38,7 +38,7 @@ struct TimelineEventCard: View {
             }
         }
         .padding(18)
-        .background(AppThemes.cardBackground)
+        .background(AppTheme.cardBackground)
         .cornerRadius(16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
