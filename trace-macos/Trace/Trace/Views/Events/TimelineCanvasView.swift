@@ -76,6 +76,8 @@ struct TimelineCanvasView: View {
     let journeyDescription: String
     
     @State private var showFeedbackSheet: Bool = false
+    @State private var showCreateEventSheet: Bool = false // Hooked up to the creation pipeline
+    
     @State private var mockTotalTimelines = 3
     @State private var mockActivities: [ActivityLogItem] = [
         ActivityLogItem(message: "Updated Weekend Cabin Trip soundscapes", timestamp: "2m ago"),
@@ -136,7 +138,8 @@ struct TimelineCanvasView: View {
                         
                         Spacer()
                         
-                        Button(action: {}) {
+                        // NEW MILESTONE ACTION TRIGGER
+                        Button(action: { showCreateEventSheet = true }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "plus")
                                     .font(.system(size: 11, weight: .bold))
@@ -154,6 +157,15 @@ struct TimelineCanvasView: View {
                         .buttonStyle(.plain)
                     }
                     
+                    // ULTRA-MINIMAL METADATA STRIP
+                    HStack {
+                        Text("ENGINEERING CANVAS METADATA PLATFORM")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(AppTheme.primaryText.opacity(0.35))
+                            .tracking(1.5)
+                        
+                        Spacer()
+                    }
                     .padding(.top, 4)
                 }
                 .padding(.horizontal, 40)
@@ -191,6 +203,10 @@ struct TimelineCanvasView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minWidth: 1150, minHeight: 700)
+        // PRESENTING YOUR EXTERNAL SHEET DIRECTLY
+        .sheet(isPresented: $showCreateEventSheet) {
+            CreateEventSheet()
+        }
         .sheet(isPresented: $showFeedbackSheet) {
             VStack(spacing: 20) {
                 Text("Shrey's Feedback Corner")
@@ -215,7 +231,7 @@ struct TimelineCanvasView: View {
 #Preview {
     TimelineCanvasView(
         journeyTitle: "Trace Architecture",
-        journeyDescription: "Test description"
+        journeyDescription: "By Priyanka, For Shrey — An immersive canvas mapping core architectural sprints."
     )
     .frame(width: 1300, height: 850)
 }
