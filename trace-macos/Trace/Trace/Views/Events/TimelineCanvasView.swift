@@ -12,12 +12,19 @@ import AppKit
 struct TimelineCanvasView: View {
     let journeyTitle: String
     let journeyDescription: String
+    var onBack: (() -> Void)? = nil
     
     @State private var showEventSheet: Bool = false
     @State private var showDeleteConfirmation: Bool = false
     @State private var showFeedbackSheet: Bool = false
     @State private var selectedEvent: TimelineEventStub? = nil
     @State private var focusedEventId: UUID? = nil
+    
+    private func dismissEventSheet() {
+        showEventSheet = false
+        selectedEvent = nil
+        focusedEventId = nil
+    }
     
     @State private var mockTotalTimelines = 3
     @State private var mockActivities: [ActivityLogItem] = [
@@ -64,6 +71,16 @@ struct TimelineCanvasView: View {
                 // IDENTITY HEADER
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(alignment: .top) {
+                        if let onBack {
+                            Button(action: onBack) {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(AppTheme.roseGoldDark)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.top, 10)
+                        }
+                        
                         VStack(alignment: .leading, spacing: 4) {
                             Text(journeyTitle)
                                 .font(.system(size: 38, weight: .bold, design: .serif))
@@ -170,17 +187,22 @@ struct TimelineCanvasView: View {
         }
         .frame(minWidth: 1150, minHeight: 700)
         
-        // --- NATIVE MODAL MODIFIERS ---
-        .sheet(isPresented: $showEventSheet, onDismiss: {
-            selectedEvent = nil
-            focusedEventId = nil
-        }) {
-            CreateEventSheet(onDismiss: {
-                showEventSheet = false
-                selectedEvent = nil
-                focusedEventId = nil
-            })
+        // --- EVENT SHEET OVERLAY ---
+        .overlay {
+            if showEventSheet {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                        .onTapGesture { dismissEventSheet() }
+                    
+                    CreateEventSheet(onDismiss: { dismissEventSheet() })
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .shadow(color: .black.opacity(0.25), radius: 20)
+                }
+                .transition(.opacity)
+            }
         }
+        .animation(.easeInOut(duration: 0.2), value: showEventSheet)
         .modifier(DeleteConfirmationModifier(
             isPresented: $showDeleteConfirmation,
             selectedItem: $selectedEvent,

@@ -28,18 +28,22 @@ struct TraceApp: App {
     
     var body: some Scene {
         WindowGroup {
-            JourneysViews(
-                journeys: $journeys,
-                recentActivities: recentActivities,
-                showCreateSheet: $showCreateSheet,
-                onOpenJourney: { journey in
-                    // TODO: navigation isn't built yet — this is the same
-                    // gap flagged before (Journey card -> its Events
-                    // timeline). Stubbed for now so it compiles and you can
-                    // verify the click itself fires correctly.
-                    print("Open journey: \(journey.title)")
-                }
-            )
+            if let journey = appState.selectedJourney {
+                TimelineCanvasView(
+                    journeyTitle: journey.title,
+                    journeyDescription: journey.description,
+                    onBack: { appState.selectedJourney = nil }
+                )
+            } else {
+                JourneysViews(
+                    journeys: $journeys,
+                    recentActivities: recentActivities,
+                    showCreateSheet: $showCreateSheet,
+                    onOpenJourney: { journey in
+                        appState.selectedJourney = journey
+                    }
+                )
+            }
         }
     }
 }
