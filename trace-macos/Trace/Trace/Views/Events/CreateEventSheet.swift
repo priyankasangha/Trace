@@ -33,12 +33,9 @@ struct CreateEventSheet: View {
     @State private var latitudeString: String = ""
     @State private var longitudeString: String = ""
     
-    // Simplified PhotosPicker States
+    // Simplified PhotosPicker States — single cover image only
     @State private var selectedCoverItem: PhotosPickerItem? = nil
     @State private var coverImage: NSImage? = nil
-    
-    @State private var selectedGalleryItems: [PhotosPickerItem] = []
-    @State private var galleryImagesCount: Int = 0
     
     // Preferences & Flags
     @State private var anniversaryEnabled: Bool = false
@@ -121,34 +118,6 @@ struct CreateEventSheet: View {
                                             .font(.system(size: 14))
                                     }
                                     .buttonStyle(.plain)
-                                }
-                                Spacer()
-                            }
-                        }
-                        
-                        FormRow(label: "Gallery Assets", labelWidth: formLabelWidth) {
-                            HStack(spacing: 12) {
-                                PhotosPicker(selection: $selectedGalleryItems, matching: .images, photoLibrary: .shared()) {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "rectangle.stack.badge.plus")
-                                        Text(galleryImagesCount == 0 ? "Attach Photo Assets" : "Update Assets Collection")
-                                    }
-                                    .font(AppTheme.subtitle)
-                                    .foregroundColor(AppTheme.roseGoldDark)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(AppTheme.roseGoldLight.opacity(0.25))
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                                }
-                                .buttonStyle(.plain)
-                                .onChange(of: selectedGalleryItems) { _, newItems in
-                                    galleryImagesCount = newItems.count
-                                }
-                                
-                                if galleryImagesCount > 0 {
-                                    Text("\(galleryImagesCount) photos loaded")
-                                        .font(AppTheme.subtitle)
-                                        .foregroundColor(AppTheme.primaryText.opacity(0.6))
                                 }
                                 Spacer()
                             }
