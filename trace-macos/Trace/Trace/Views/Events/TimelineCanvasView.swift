@@ -2,81 +2,22 @@ import SwiftUI
 import AppKit
 
 // =========================================================================
-// 1. ATTACHED DATA STRUCTURE STUB & MODELS
-// =========================================================================
-struct TimelineEventStub: Identifiable {
-    let id = UUID()
-    let category: String
-    let title: String
-    let dateString: String
-    let description: String
-    let imageName: String
-}
-
-// =========================================================================
-// 2. BOUNDED SIDE ALIGNMENT ROW
-// =========================================================================
-struct BoundedVerticalMilestoneRow: View {
-    let event: TimelineEventStub
-    let isLeftAligned: Bool
-    
-    private let contentBlockWidth: CGFloat = 280
-    private let horizontalLineLength: CGFloat = 60
-    
-    var body: some View {
-        HStack(spacing: 0) {
-            // COLUMN 1: LEFT WING AREA
-            HStack(spacing: 0) {
-                if isLeftAligned {
-                    Spacer()
-                    EventBlock(event: event)
-                    
-                    // Connected to the precise center-right edge of the block
-                    Rectangle()
-                        .fill(AppTheme.roseGoldLight.opacity(0.3))
-                        .frame(width: horizontalLineLength, height: 1.5)
-                } else {
-                    Spacer()
-                }
-            }
-            .frame(width: contentBlockWidth + horizontalLineLength)
-            
-            // COLUMN 2: CENTER SPINE ANCHOR NODE (Always vertically centered with connection lines)
-            Circle()
-                .fill(AppTheme.roseGoldBase)
-                .frame(width: 8, height: 8)
-                .background(Circle().stroke(AppTheme.roseGoldLight.opacity(0.5), lineWidth: 4))
-                .frame(width: 2)
-            
-            // COLUMN 3: RIGHT WING AREA
-            HStack(spacing: 0) {
-                if !isLeftAligned {
-                    // Connected to the precise center-left edge of the block
-                    Rectangle()
-                        .fill(AppTheme.roseGoldLight.opacity(0.3))
-                        .frame(width: horizontalLineLength, height: 1.5)
-                    
-                    EventBlock(event: event)
-                    Spacer()
-                } else {
-                    Spacer()
-                }
-            }
-            .frame(width: contentBlockWidth + horizontalLineLength)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
-
-// =========================================================================
-// 3. TIMELINE CANVAS VIEW WITH SPLIT SIDEBAR LAYOUT
+// TIMELINE CANVAS VIEW WITH SPLIT SIDEBAR LAYOUT
+//
+// TimelineEventStub -> Models/TimelineEventStub.swift
+// BoundedVerticalMilestoneRow, MilestoneRowContainer -> Views/Events/Components/MilestoneRow.swift
+// MilestoneActionButtons -> Views/Events/Components/MilestoneActionButtons.swift
+// DeleteConfirmationModifier -> Views/Components/DeleteConfirmationModifier.swift
 // =========================================================================
 struct TimelineCanvasView: View {
     let journeyTitle: String
     let journeyDescription: String
     
     @State private var showFeedbackSheet: Bool = false
-    @State private var showCreateEventSheet: Bool = false // Hooked up to the creation pipeline
+    @State private var showEventSheet: Bool = false
+    @State private var showDeleteConfirmation: Bool = false
+    @State private var selectedEvent: TimelineEventStub? = nil
+    @State private var focusedEventId: UUID? = nil
     
     @State private var mockTotalTimelines = 3
     @State private var mockActivities: [ActivityLogItem] = [
@@ -98,14 +39,14 @@ struct TimelineCanvasView: View {
             title: "Database Schema Finalized",
             dateString: "MAY 31, 2026",
             description: "Mapped out all core models and attributes natively in Prisma.",
-            imageName: "externaldrive.badge.checkmark"
+            imageName: "macmini"
         ),
         TimelineEventStub(
             category: "INTERFACE",
             title: "First Fluid UI Prototype",
             dateString: "JUN 12, 2026",
             description: "Successfully rendered fluid macOS windows and basic sheets.",
-            imageName: "window.shade.closed"
+            imageName: "ipad"
         )
     ]
     
@@ -120,7 +61,7 @@ struct TimelineCanvasView: View {
             
             // DYNAMIC TIMELINE WORKSPACE CANVAS
             VStack(spacing: 0) {
-                // CLEANED HERO IDENTITY HEADER
+                // IDENTITY HEADER
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 4) {
@@ -138,8 +79,11 @@ struct TimelineCanvasView: View {
                         
                         Spacer()
                         
-                        // NEW MILESTONE ACTION TRIGGER
-                        Button(action: { showCreateEventSheet = true }) {
+                        // ACTION TRIGGER
+                        Button(action: {
+                            selectedEvent = nil
+                            showEventSheet = true
+                        }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "plus")
                                     .font(.system(size: 11, weight: .bold))
@@ -157,13 +101,11 @@ struct TimelineCanvasView: View {
                         .buttonStyle(.plain)
                     }
                     
-                    // ULTRA-MINIMAL METADATA STRIP
                     HStack {
                         Text("ENGINEERING CANVAS METADATA PLATFORM")
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .foregroundColor(AppTheme.primaryText.opacity(0.35))
                             .tracking(1.5)
-                        
                         Spacer()
                     }
                     .padding(.top, 4)
@@ -189,44 +131,74 @@ struct TimelineCanvasView: View {
                             .padding(.vertical, 40)
                         
                         VStack(spacing: 60) {
-                            ForEach(Array(sampleEvents.enumerated()), id: \.offset) { index, event in
-                                let isLeftAligned = index % 2 == 0
-                                BoundedVerticalMilestoneRow(event: event, isLeftAligned: isLeftAligned)
+                            ForEach(Array(sampleEvents.enumerated()), id: \.element.id) { item in
+                                EventRowContainer(
+                                    event: item.element,
+                                    isLeftAligned: item.offset % 2 == 0,
+                                    isFocused: focusedEventId == item.element.id,
+                                    onDoubleTap: {
+                                        withAnimation {
+                                            if focusedEventId == item.element.id {
+                                                focusedEventId = nil
+                                            } else {
+                                                focusedEventId = item.element.id
+                                            }
+                                        }
+                                    },
+                                    onEdit: {
+                                        selectedEvent = item.element
+                                        showEventSheet = true
+                                    },
+                                    onDelete: {
+                                        selectedEvent = item.element
+                                        showDeleteConfirmation = true
+                                    }
+                                )
                             }
                         }
                         .padding(.vertical, 40)
                     }
                     .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation { focusedEventId = nil }
+                    }
                 }
                 .background(AppTheme.primaryBackground.opacity(0.98))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minWidth: 1150, minHeight: 700)
-        // PRESENTING YOUR EXTERNAL SHEET DIRECTLY
-        .sheet(isPresented: $showCreateEventSheet) {
+        
+        // --- NATIVE MODAL MODIFIERS ---
+        .sheet(isPresented: $showEventSheet, onDismiss: {
+            selectedEvent = nil
+            focusedEventId = nil
+        }) {
             CreateEventSheet()
         }
-        .sheet(isPresented: $showFeedbackSheet) {
-            VStack(spacing: 20) {
-                Text("Shrey's Feedback Corner")
-                    .font(.system(size: 18, weight: .bold, design: .serif))
-                    .foregroundColor(AppTheme.roseGoldDark)
-                Text("Review space pending context pipelines.")
-                    .font(.system(size: 12))
-                    .foregroundColor(AppTheme.primaryText.opacity(0.6))
-                Button("Dismiss") { showFeedbackSheet.toggle() }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
+        .modifier(DeleteConfirmationModifier(
+            isPresented: $showDeleteConfirmation,
+            selectedItem: $selectedEvent,
+            itemLabel: "Milestone",
+            displayName: { $0.title },
+            onDelete: { event in
+                sampleEvents.removeAll(where: { $0.id == event.id })
+                focusedEventId = nil
             }
-            .padding(40)
-            .frame(width: 400, height: 250)
+        ))
+        .sheet(isPresented: $showFeedbackSheet) {
+            // NOTE: this previously pointed at a local FeedbackCornerSheet
+            // stub defined at the bottom of this file. You already have a
+            // Views/ShreysFeedback folder — wire this up to whatever real
+            // view lives there instead of the placeholder that was removed.
+            Text("TODO: wire up to Views/ShreysFeedback")
         }
     }
 }
 
 // =========================================================================
-// 4. CANVAS RENDERING PREVIEW WINDOW
+// CANVAS PREVIEW
 // =========================================================================
 #Preview {
     TimelineCanvasView(
@@ -235,3 +207,4 @@ struct TimelineCanvasView: View {
     )
     .frame(width: 1300, height: 850)
 }
+
