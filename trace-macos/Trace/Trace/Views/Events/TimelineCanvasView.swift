@@ -87,7 +87,7 @@ struct TimelineCanvasView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "plus")
                                     .font(.system(size: 11, weight: .bold))
-                                Text("NEW MILESTONE")
+                                Text("NEW EVENT")
                                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                                     .tracking(0.5)
                             }
@@ -180,7 +180,7 @@ struct TimelineCanvasView: View {
         .modifier(DeleteConfirmationModifier(
             isPresented: $showDeleteConfirmation,
             selectedItem: $selectedEvent,
-            itemLabel: "Milestone",
+            itemLabel: "Event",
             displayName: { $0.title },
             onDelete: { event in
                 sampleEvents.removeAll(where: { $0.id == event.id })

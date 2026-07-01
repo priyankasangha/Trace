@@ -53,7 +53,7 @@ struct CreateEventSheet: View {
                 }
                 .buttonStyle(.plain)
                 
-                Text(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "New Event Milestone" : title)
+                Text(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Create New Event" : title)
                     .font(AppTheme.title)
                     .foregroundColor(AppTheme.roseGoldDark)
                     .lineLimit(1)
@@ -129,7 +129,7 @@ struct CreateEventSheet: View {
                         FormSectionHeader(text: "GENERAL IDENTITY")
                         
                         FormRow(label: "Title", labelWidth: formLabelWidth) {
-                            TextField("Enter milestone title...", text: $title)
+                            TextField("Enter event title...", text: $title)
                                 .styledInput()
                         }
                         
@@ -238,7 +238,7 @@ struct CreateEventSheet: View {
                                 Text("Enable Anniversary Celebrations")
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(AppTheme.primaryText)
-                                Text("Triggers custom milestone confetti popups inside the grid.")
+                                Text("Triggers custom event confetti popups inside the grid.")
                                     .font(.system(size: 10))
                                     .foregroundColor(AppTheme.primaryText.opacity(0.6))
                             }
@@ -281,7 +281,7 @@ struct CreateEventSheet: View {
                 .buttonStyle(.bordered)
                 .keyboardShortcut(.cancelAction)
                 
-                Button("Save Milestone") {
+                Button("Save") {
                     saveMilestone()
                 }
                 .buttonStyle(.borderedProminent)
