@@ -175,7 +175,11 @@ struct TimelineCanvasView: View {
             selectedEvent = nil
             focusedEventId = nil
         }) {
-            CreateEventSheet()
+            CreateEventSheet(onDismiss: {
+                showEventSheet = false
+                selectedEvent = nil
+                focusedEventId = nil
+            })
         }
         .modifier(DeleteConfirmationModifier(
             isPresented: $showDeleteConfirmation,
