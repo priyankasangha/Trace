@@ -8,71 +8,115 @@ struct AppSidebarView: View {
     // Smooth layout interaction states
     @State private var footerHeartScale: CGFloat = 1.0
     @State private var feedbackCardHovered: Bool = false
+    @State private var profileFlipped: Bool = false
+    @State private var overviewFlipped: Bool = false
+    @State private var activityFlipped: Bool = false
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 14) {
             
             // PROFILE IDENTITY CARD
-            VStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(AppTheme.roseGoldLight.opacity(0.4))
-                        .frame(width: 68, height: 68)
+            FlippableCard(isFlipped: $profileFlipped) {
+                VStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(AppTheme.roseGoldLight.opacity(0.4))
+                            .frame(width: 68, height: 68)
+                        
+                        Text("PS")
+                            .font(.system(size: 20, weight: .medium, design: .serif))
+                            .foregroundColor(AppTheme.roseGoldDark)
+                    }
+                    .overlay(Circle().stroke(AppTheme.roseGoldBase.opacity(0.5), lineWidth: AppTheme.thinLineWidth))
                     
-                    Text("PS")
-                        .font(.system(size: 20, weight: .medium, design: .serif))
-                        .foregroundColor(AppTheme.roseGoldDark)
+                    VStack(spacing: 3) {
+                        Text("Priyanka Sangha")
+                            .font(AppTheme.title)
+                            .foregroundColor(AppTheme.primaryText)
+                        
+                        Text("Architect & Creator")
+                            .font(AppTheme.appTagline)
+                            .tracking(AppTheme.placardTracking)
+                            .foregroundColor(AppTheme.roseGoldDark)
+                    }
                 }
-                .overlay(Circle().stroke(AppTheme.roseGoldBase.opacity(0.5), lineWidth: AppTheme.thinLineWidth))
-                
-                VStack(spacing: 3) {
-                    Text("Priyanka Sangha")
-                        .font(AppTheme.title)
-                        .foregroundColor(AppTheme.primaryText)
-                    
-                    Text("Architect & Creator")
-                        .font(AppTheme.appTagline)
-                        .tracking(AppTheme.placardTracking)
-                        .foregroundColor(AppTheme.roseGoldDark)
-                }
+                .padding(.vertical, 24)
+                .frame(maxWidth: .infinity)
+                .background(Color(nsColor: .controlBackgroundColor).opacity(0.4))
+                .cornerRadius(12)
+                .fineLineBorder()
             }
-            .padding(.vertical, 24)
-            .frame(maxWidth: .infinity)
-            .background(Color(nsColor: .controlBackgroundColor).opacity(0.4))
-            .cornerRadius(12)
-            .fineLineBorder()
             
             // METRICS / OVERVIEW MONITOR
-            VStack(alignment: .leading, spacing: 14) {
-                Text("OVERVIEW")
-                    .font(.system(size: 9, weight: .bold))
-                    .tracking(AppTheme.titleTracking)
-                    .foregroundColor(AppTheme.roseGoldDark)
-                
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(AppTheme.roseGoldDark.opacity(0.5))
-                        .frame(width: 4, height: 4)
-                    Rectangle()
-                        .fill(AppTheme.roseGoldLight.opacity(0.3))
-                        .frame(height: AppTheme.thinLineWidth)
-                    Circle()
-                        .fill(AppTheme.roseGoldDark.opacity(0.5))
-                        .frame(width: 4, height: 4)
+            FlippableCard(isFlipped: $overviewFlipped) {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("OVERVIEW")
+                        .font(.system(size: 9, weight: .bold))
+                        .tracking(AppTheme.titleTracking)
+                        .foregroundColor(AppTheme.roseGoldDark)
+                    
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(AppTheme.roseGoldDark.opacity(0.5))
+                            .frame(width: 4, height: 4)
+                        Rectangle()
+                            .fill(AppTheme.roseGoldLight.opacity(0.3))
+                            .frame(height: AppTheme.thinLineWidth)
+                        Circle()
+                            .fill(AppTheme.roseGoldDark.opacity(0.5))
+                            .frame(width: 4, height: 4)
+                    }
+                    .padding(.bottom, 2)
+                    
+                    Group {
+                        MetricRow(label: "Total Timelines", value: "\(totalTimelinesCount)")
+                        MetricRow(label: "Active Contexts", value: "1")
+                        MetricRow(label: "Shared Spaces", value: "2")
+                        MetricRow(label: "Pinned Milestones", value: "8")
+                        MetricRow(label: "Total Contributors", value: "5")
+                    }
                 }
-                .padding(.bottom, 2)
-                
-                Group {
-                    MetricRow(label: "Total Timelines", value: "\(totalTimelinesCount)")
-                    MetricRow(label: "Active Contexts", value: "1")
-                    MetricRow(label: "Shared Spaces", value: "2")
-                    MetricRow(label: "Pinned Milestones", value: "8")
-                    MetricRow(label: "Total Contributors", value: "5")
-                }
+                .padding(16)
+                .background(AppTheme.roseGoldLight.opacity(0.08))
+                .cornerRadius(12)
             }
-            .padding(16)
-            .background(AppTheme.roseGoldLight.opacity(0.08))
-            .cornerRadius(12)
+            
+            // LOG ENGINE PLACARD
+            FlippableCard(isFlipped: $activityFlipped) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("RECENT ACTIVITY")
+                        .font(.system(size: 9, weight: .bold))
+                        .tracking(AppTheme.titleTracking)
+                        .foregroundColor(AppTheme.roseGoldDark)
+                    
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(recentActivities) { log in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(log.message)
+                                    .font(.system(size: 11))
+                                    .foregroundColor(AppTheme.primaryText.opacity(0.85))
+                                    .lineLimit(1)
+                                
+                                Text(log.timestamp)
+                                    .font(.system(size: 9, weight: .medium))
+                                    .foregroundColor(AppTheme.roseGoldDark.opacity(0.7))
+                            }
+                            
+                            if log.id != recentActivities.last?.id {
+                                Divider()
+                                    .opacity(0.15)
+                            }
+                        }
+                    }
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(nsColor: .controlBackgroundColor).opacity(0.2))
+                .cornerRadius(12)
+                .fineLineBorder()
+            }
+            
+            Spacer()
             
             // INTERACTIVE COLLABORATION PANEL
             Button(action: { showFeedbackSheet.toggle() }) {
@@ -120,41 +164,6 @@ struct AppSidebarView: View {
                 feedbackCardHovered = hovering
             }
             
-            // LOG ENGINE PLACARD
-            VStack(alignment: .leading, spacing: 12) {
-                Text("RECENT ACTIVITY")
-                    .font(.system(size: 9, weight: .bold))
-                    .tracking(AppTheme.titleTracking)
-                    .foregroundColor(AppTheme.roseGoldDark)
-                
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(recentActivities) { log in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(log.message)
-                                .font(.system(size: 11))
-                                .foregroundColor(AppTheme.primaryText.opacity(0.85))
-                                .lineLimit(1)
-                            
-                            Text(log.timestamp)
-                                .font(.system(size: 9, weight: .medium))
-                                .foregroundColor(AppTheme.roseGoldDark.opacity(0.7))
-                        }
-                        
-                        if log.id != recentActivities.last?.id {
-                            Divider()
-                                .opacity(0.15)
-                        }
-                    }
-                }
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(nsColor: .controlBackgroundColor).opacity(0.2))
-            .cornerRadius(12)
-            .fineLineBorder()
-            
-            Spacer()
-            
             // SIGNATURE PLACARD FOOTER
             HStack(spacing: 6) {
                 Text("By Priyanka, For Shrey")
@@ -178,6 +187,49 @@ struct AppSidebarView: View {
         .padding(.bottom, 20)
         .background(AppTheme.primaryBackground.opacity(0.95))
         .frame(minWidth: 260, idealWidth: 280, maxWidth: 400)
+    }
+}
+
+// Flippable card — hover reveals a rose gold back with a heart
+private struct FlippableCard<Front: View>: View {
+    @Binding var isFlipped: Bool
+    @ViewBuilder var front: () -> Front
+    
+    var body: some View {
+        front()
+            .opacity(isFlipped ? 0 : 1)
+            .overlay {
+                // Back face — sized to match front exactly
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppTheme.roseGoldLight.opacity(0.55),
+                                AppTheme.roseGoldBase.opacity(0.45)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay(
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 26))
+                            .foregroundColor(AppTheme.roseGoldDark.opacity(0.7))
+                            .scaleEffect(isFlipped ? 1.0 : 0.5)
+                            .animation(.spring(response: 0.4, dampingFraction: 0.55).delay(0.15), value: isFlipped)
+                    )
+                    .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
+                    .opacity(isFlipped ? 1 : 0)
+            }
+        .rotation3DEffect(
+            .degrees(isFlipped ? 180 : 0),
+            axis: (x: 0, y: 1, z: 0),
+            perspective: 0.4
+        )
+        .animation(.spring(response: 0.55, dampingFraction: 0.75), value: isFlipped)
+        .onHover { hovering in
+            isFlipped = hovering
+        }
     }
 }
 
