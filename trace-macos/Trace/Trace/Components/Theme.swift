@@ -10,9 +10,19 @@ struct AppTheme {
         dark: Color(nsColor: .windowBackgroundColor)
     )
     
-    static let cardBackground = Color.white.opacity(0.65)
+    // FIXED: was `Color.white.opacity(0.65)` — a hardcoded light color with
+    // no dark variant, which is why this stayed a flat cream band in dark
+    // mode. Now uses the same NSColor.controlBackgroundColor that
+    // JourneysViews/AppSidebarView already use directly for their cards —
+    // that NSColor is natively dynamic, so it adapts automatically.
+    static let cardBackground = Color(nsColor: .controlBackgroundColor).opacity(0.65)
     
-    static let blurViewBackground = Color(hex: "#F5F5F533")
+    // FIXED: was a hardcoded near-white hex (#F5F5F533) with no dark
+    // variant — same bug as cardBackground, just for the blur/glass layer.
+    static let blurViewBackground = Color.dynamic(
+        light: Color(hex: "#F5F5F533"),
+        dark: Color(hex: "#1C1C1E33")
+    )
     
     static let primaryText = Color.dynamic(
         light: Color(nsColor: .labelColor),
@@ -106,3 +116,4 @@ extension Color {
         )
     }
 }
+

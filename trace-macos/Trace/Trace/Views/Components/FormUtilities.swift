@@ -106,11 +106,22 @@ extension View {
 // APPKIT INTEGRATION: NATIVE SEARCH FIELD
 // ==========================================
 
+/// Whether NativeSearchField draws its own native bezel/background/icons,
+/// or renders as a bare text field so a SwiftUI-drawn container (like a
+/// custom capsule) is the only visible chrome.
+enum SearchFieldChrome {
+    case native // system bezel, background, and built-in search/cancel icons — default, unchanged behavior
+    case plain  // no bezel, no background, no focus ring, no built-in icons — caller supplies its own chrome
+}
+
 /// A lightweight wrapper around the native macOS NSSearchField for quick filtering.
 struct NativeSearchField: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String = ""
+    var chrome: SearchFieldChrome = .native
+    var autoFocus: Bool = false
     var onCommit: () -> Void
+    var onFocusLost: (() -> Void)? = nil
     
     func makeNSView(context: Context) -> NSSearchField {
         let searchField = NSSearchField()
@@ -120,6 +131,23 @@ struct NativeSearchField: NSViewRepresentable {
         
         searchField.target = context.coordinator
         searchField.action = #selector(Coordinator.textCommitted)
+        
+        if chrome == .plain {
+            searchField.isBezeled = false
+            searchField.drawsBackground = false
+            searchField.focusRingType = .none
+            if let cell = searchField.cell as? NSSearchFieldCell {
+                cell.searchButtonCell = nil
+                cell.cancelButtonCell = nil
+            }
+        }
+        
+        if autoFocus {
+            DispatchQueue.main.async {
+                searchField.window?.makeFirstResponder(searchField)
+            }
+        }
+        
         return searchField
     }
     
@@ -148,6 +176,10 @@ struct NativeSearchField: NSViewRepresentable {
             if let searchField = obj.object as? NSSearchField {
                 parent.text = searchField.stringValue
             }
+        }
+        
+        func controlTextDidEndEditing(_ obj: Notification) {
+            parent.onFocusLost?()
         }
     }
 }

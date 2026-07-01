@@ -2,9 +2,20 @@ import SwiftUI
 
 // ==========================================
 // EDITORIAL JOURNEY DISPLAY CARD
+//
+// Interaction model, deliberately different from EventRow's double-tap:
+// Events had no competing single-click action, so double-tap was free to
+// use for revealing edit/delete. Journeys DO have a competing single-click
+// action (opening the journey), so edit/delete are revealed on hover
+// instead — two separate input channels, no ambiguity. Reuses the
+// isHovered state this card already tracked for its scale/shadow effect.
 // ==========================================
 struct JourneyCardView: View {
     let journey: JourneyItem
+    var onOpen: () -> Void
+    var onEdit: () -> Void
+    var onDelete: () -> Void
+    
     @State private var isHovered = false
     
     var body: some View {
@@ -29,7 +40,18 @@ struct JourneyCardView: View {
                         .background(AppTheme.roseGoldDark)
                         .clipShape(Capsule())
                         .padding(10)
+                        // Nudge the "Ongoing" pill out of the way when the
+                        // edit/delete buttons are showing in the same corner.
+                        .offset(y: isHovered ? 28 : 0)
+                        .animation(.easeOut(duration: 0.15), value: isHovered)
                 }
+                
+                EditDeleteButtons(onEdit: onEdit, onDelete: onDelete)
+                    .padding(10)
+                    .opacity(isHovered ? 1 : 0)
+                    .scaleEffect(isHovered ? 1 : 0.85, anchor: .topTrailing)
+                    .allowsHitTesting(isHovered)
+                    .animation(.easeOut(duration: 0.15), value: isHovered)
             }
             .frame(height: 115)
             
@@ -78,6 +100,8 @@ struct JourneyCardView: View {
         .scaleEffect(isHovered ? 1.015 : 1.0)
         .shadow(color: Color.black.opacity(isHovered ? 0.04 : 0.0), radius: 8, x: 0, y: 4)
         .animation(.easeOut(duration: 0.2), value: isHovered)
+        .contentShape(RoundedRectangle(cornerRadius: 12))
+        .onTapGesture(perform: onOpen)
         .onHover { hovering in
             isHovered = hovering
         }

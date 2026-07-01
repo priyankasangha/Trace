@@ -1,7 +1,7 @@
 import Foundation
 
 struct JourneyItem: Identifiable {
-    let id = UUID()
+    var id = UUID()
     let title: String
     let description: String
     let dateRangeString: String

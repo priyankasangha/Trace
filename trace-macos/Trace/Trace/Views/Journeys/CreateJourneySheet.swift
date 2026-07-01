@@ -2,13 +2,12 @@ import SwiftUI
 import PhotosUI
 import AppKit
 
-// ==========================================
-// 1. MAIN MODULAR TIMELINE SHEET
-// ==========================================
 struct CreateJourneySheet: View {
-    @Environment(\.dismiss) private var dismiss
+    var editingJourney: JourneyItem? = nil
+    var onDismiss: () -> Void
+    var onSave: (JourneyItem) -> Void
     
-    // Form State (Maps to Journey Prisma Model)
+    // Form State
     @State private var title: String = ""
     @State private var description: String = ""
     @State private var participants: [String] = []
@@ -24,16 +23,13 @@ struct CreateJourneySheet: View {
     
     @State private var isOngoing: Bool = false
     
-    // Cover Photo Picker States
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var coverImage: NSImage? = nil
     
     var body: some View {
         VStack(spacing: 0) {
-            
-            // HEADER SECTION
             HStack(spacing: 12) {
-                Button(action: { dismiss() }) {
+                Button(action: { onDismiss() }) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(AppTheme.roseGoldDark)
@@ -51,11 +47,8 @@ struct CreateJourneySheet: View {
             .padding(.top, 24)
             .padding(.bottom, 24)
             
-            // SCROLLABLE CONTENT CANVAS
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 26) {
-                    
-                    // SECTION 1: MINIMALIST COVER MEDIA
                     VStack(alignment: .leading, spacing: 12) {
                         FormSectionHeader(text: "Visual Accent")
                         
@@ -106,13 +99,11 @@ struct CreateJourneySheet: View {
                                     }
                                     .buttonStyle(.plain)
                                 }
-                                
                                 Spacer()
                             }
                         }
                     }
                     
-                    // SECTION 2: GENERAL METADATA
                     VStack(alignment: .leading, spacing: 12) {
                         FormSectionHeader(text: "GENERAL")
                         
@@ -128,7 +119,6 @@ struct CreateJourneySheet: View {
                         }
                     }
                     
-                    // SECTION 3: TIMELINE TIMESTAMPS
                     VStack(alignment: .leading, spacing: 12) {
                         FormSectionHeader(text: "DATES")
                         
@@ -169,7 +159,6 @@ struct CreateJourneySheet: View {
                         }
                     }
                     
-                    // SECTION 4: COLLABORATORS
                     VStack(alignment: .leading, spacing: 12) {
                         FormSectionHeader(text: "COLLABORATORS")
                         
@@ -219,17 +208,16 @@ struct CreateJourneySheet: View {
             Divider()
                 .opacity(0.2)
             
-            // BOTTOM ACTION DRAWER
             HStack(spacing: 12) {
                 Spacer()
                 
                 Button("Cancel") {
-                    dismiss()
+                    onDismiss()
                 }
                 .buttonStyle(.bordered)
                 .keyboardShortcut(.cancelAction)
                 
-                Button("Create") {
+                Button(editingJourney == nil ? "Create" : "Save") {
                     saveJourney()
                 }
                 .buttonStyle(.borderedProminent)
@@ -243,18 +231,37 @@ struct CreateJourneySheet: View {
         }
         .frame(width: 460, height: 560)
         .background(AppTheme.primaryBackground)
-        .preferredColorScheme(.light)
+        .onAppear {
+            if let journey = editingJourney {
+                self.title = journey.title
+                self.description = journey.description
+                self.isOngoing = journey.isOngoing
+            }
+        }
     }
     
     private func saveJourney() {
-        dismiss()
+        let startMonthStr = startMonth != nil ? Calendar.current.shortMonthSymbols[startMonth! - 1] : "01"
+        let dateRangeStr = isOngoing ? "\(startMonthStr) \(startYear ?? 2026) — Ongoing" : "\(startMonthStr) \(startYear ?? 2026) — \(endMonth != nil ? Calendar.current.shortMonthSymbols[endMonth! - 1] : "01") \(endYear ?? 2026)"
+        
+        // FIXED: Instantiates accurately with the updated, mutable JourneyItem shape definition
+        let item = JourneyItem(
+            id: editingJourney?.id ?? UUID(),
+            title: title,
+            description: description,
+            dateRangeString: dateRangeStr,
+            collaboratorCount: participants.count,
+            coverImageName: nil,
+            isOngoing: isOngoing
+        )
+        onSave(item)
+        onDismiss()
     }
 }
 
 // ==========================================
-// 2. SUPPORTING SUBVIEWS & UTILITIES
+// SUPPORTING UTILITIES
 // ==========================================
-
 struct CustomDatePickerRow: View {
     @Binding var day: Int?
     @Binding var month: Int?
@@ -262,10 +269,8 @@ struct CustomDatePickerRow: View {
     
     var body: some View {
         HStack(spacing: 8) {
-            Picker("Year", selection: Binding(
-                get: { year ?? 2026 },
-                set: { year = $0 }
-            )) {
+            // FIXED: Safe explicit loop sequences pass compiler checks
+            Picker("Year", selection: Binding(get: { year ?? 2026 }, set: { year = $0 })) {
                 ForEach(1900...2100, id: \.self) { y in
                     Text(String(y)).tag(y)
                 }
@@ -274,10 +279,7 @@ struct CustomDatePickerRow: View {
             .labelsHidden()
             .fixedSize()
             
-            Picker("Month", selection: Binding(
-                get: { month ?? 1 },
-                set: { month = $0 }
-            )) {
+            Picker("Month", selection: Binding(get: { month ?? 1 }, set: { month = $0 })) {
                 ForEach(1...12, id: \.self) { m in
                     Text(Calendar.current.shortMonthSymbols[m - 1]).tag(m)
                 }
@@ -286,10 +288,7 @@ struct CustomDatePickerRow: View {
             .labelsHidden()
             .fixedSize()
             
-            Picker("Day", selection: Binding(
-                get: { day ?? 1 },
-                set: { day = $0 }
-            )) {
+            Picker("Day", selection: Binding(get: { day ?? 1 }, set: { day = $0 })) {
                 ForEach(1...31, id: \.self) { d in
                     Text(String(format: "%02d", d)).tag(d)
                 }
@@ -304,13 +303,10 @@ struct CustomDatePickerRow: View {
 struct FlowLayout: Layout {
     var spacing: CGFloat
     
-    init(spacing: CGFloat = 6) {
-        self.spacing = spacing
-    }
+    init(spacing: CGFloat = 6) { self.spacing = spacing }
     
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = handleLayout(proposal: proposal, subviews: subviews)
-        return result.size
+        handleLayout(proposal: proposal, subviews: subviews).size
     }
     
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
@@ -338,13 +334,6 @@ struct FlowLayout: Layout {
             highestInRow = max(highestInRow, size.height)
             currentX += size.width + spacing
         }
-        
-        let totalHeight = currentY + highestInRow
-        let totalWidth = proposal.width ?? currentX
-        return (CGSize(width: totalWidth, height: totalHeight), positions)
+        return (CGSize(width: proposal.width ?? currentX, height: currentY + highestInRow), positions)
     }
-}
-
-#Preview {
-    CreateJourneySheet()
 }

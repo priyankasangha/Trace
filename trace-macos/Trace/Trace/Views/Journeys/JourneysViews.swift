@@ -1,10 +1,7 @@
 import SwiftUI
 
 // ==========================================
-// 1. DATA MODEL
-//    (JourneyItem lives in Views/Journeys/Models/JourneyItem.swift —
-//    ActivityLogItem stays here since it's small and only meaningfully
-//    used alongside this view and AppSidebarView)
+// DATA MODEL (Local Activity Log Context)
 // ==========================================
 struct ActivityLogItem: Identifiable {
     let id = UUID()
@@ -13,21 +10,27 @@ struct ActivityLogItem: Identifiable {
 }
 
 // ==========================================
-// 2. MAIN JOURNEYS INTERFACE (WITH SIDEBAR)
-//
-// JourneyCardView -> Views/Journeys/Components/JourneyCardView.swift
-// fineLineBorder() -> already defined in your design system file
-// (the FineLineBorder ViewModifier) — not redefined here
+// MAIN JOURNEYS INTERFACE
 // ==========================================
 struct JourneysViews: View {
-    let journeys: [JourneyItem]
-    let recentActivities: [ActivityLogItem] // Passed down for the sidebar
+    @Binding var journeys: [JourneyItem]
+    let recentActivities: [ActivityLogItem]
     
     @Binding var showCreateSheet: Bool
-    @Binding var showFeedbackSheet: Bool // Bound to the sidebar's interactive card
+    @Binding var showFeedbackSheet: Bool
+    
+    var onOpenJourney: (JourneyItem) -> Void
     
     @State private var searchText: String = ""
     @State private var isSearchActive: Bool = false
+    
+    @State private var selectedJourney: JourneyItem? = nil
+    @State private var showDeleteConfirmation: Bool = false
+    
+    private func dismissCreateSheet() {
+        showCreateSheet = false
+        selectedJourney = nil
+    }
     
     private let columns = [
         GridItem(.adaptive(minimum: 240, maximum: 340), spacing: 20)
@@ -44,17 +47,14 @@ struct JourneysViews: View {
     
     var body: some View {
         HSplitView {
-            // SIDEBAR PLACEMENT (LEFT)
             AppSidebarView(
                 totalTimelinesCount: journeys.count,
                 recentActivities: recentActivities,
                 showFeedbackSheet: $showFeedbackSheet
             )
             
-            // MAIN CANVAS WORKSPACE (RIGHT)
             VStack(spacing: 0) {
-                // TOP HEADER CONTROL ROW
-                HStack {
+                HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Journeys")
                             .font(AppTheme.largeTitle)
@@ -66,50 +66,14 @@ struct JourneysViews: View {
                     
                     Spacer()
                     
-                    HStack(spacing: 10) {
-                        if isSearchActive {
-                            HStack(spacing: 6) {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(AppTheme.primaryText.opacity(0.4))
-                                
-                                NativeSearchField(text: $searchText, placeholder: "Search journeys...") {}
-                                    .frame(width: 200, height: 22)
-                                
-                                Button(action: {
-                                    withAnimation(.easeOut(duration: 0.15)) {
-                                        isSearchActive = false
-                                        searchText = ""
-                                    }
-                                }) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(AppTheme.primaryText.opacity(0.3))
-                                        .font(.system(size: 12))
-                                }
-                                .buttonStyle(.plain)
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(Color(nsColor: .controlBackgroundColor))
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .fineLineBorder()
-                            .transition(.move(edge: .trailing).combined(with: .opacity))
-                        } else {
-                            Button(action: {
-                                withAnimation(.easeOut(duration: 0.15)) {
-                                    isSearchActive = true
-                                }
-                            }) {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(AppTheme.roseGoldDark)
-                                    .frame(width: 28, height: 28)
-                            }
-                            .buttonStyle(.plain)
-                            .help("Search Journeys")
-                        }
+                    HStack(spacing: 12) {
+                        JourneySearchCapsule(searchText: $searchText, isActive: $isSearchActive)
                         
-                        Button(action: { showCreateSheet.toggle() }) {
+                        // FIXED: Clears selection explicitly so the sheet re-evaluates as a fresh creation modal
+                        Button(action: {
+                            selectedJourney = nil
+                            showCreateSheet = true
+                        }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "plus")
                                     .font(.system(size: 11, weight: .bold))
@@ -129,7 +93,6 @@ struct JourneysViews: View {
                 .padding(.top, AppTheme.windowTopSafetyPadding + 12)
                 .padding(.bottom, 24)
                 
-                // GRID CANVAS
                 ScrollView(.vertical, showsIndicators: true) {
                     if filteredJourneys.isEmpty {
                         VStack(spacing: 8) {
@@ -145,7 +108,18 @@ struct JourneysViews: View {
                     } else {
                         LazyVGrid(columns: columns, spacing: 24) {
                             ForEach(filteredJourneys) { journey in
-                                JourneyCardView(journey: journey)
+                                JourneyCardView(
+                                    journey: journey,
+                                    onOpen: { onOpenJourney(journey) },
+                                    onEdit: {
+                                        selectedJourney = journey
+                                        showCreateSheet = true
+                                    },
+                                    onDelete: {
+                                        selectedJourney = journey
+                                        showDeleteConfirmation = true
+                                    }
+                                )
                             }
                         }
                         .padding(.horizontal, 32)
@@ -155,25 +129,111 @@ struct JourneysViews: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(AppTheme.primaryBackground)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if isSearchActive {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                        isSearchActive = false
+                        searchText = ""
+                    }
+                }
+            }
         }
+        .modifier(DeleteConfirmationModifier(
+            isPresented: $showDeleteConfirmation,
+            selectedItem: $selectedJourney,
+            itemLabel: "Journey",
+            displayName: { $0.title },
+            onDelete: { journey in
+                journeys.removeAll(where: { $0.id == journey.id })
+            }
+        ))
+        .overlay {
+            if showCreateSheet {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                        .onTapGesture { dismissCreateSheet() }
+                    
+                    CreateJourneySheet(
+                        editingJourney: selectedJourney,
+                        onDismiss: { dismissCreateSheet() },
+                        onSave: { newJourney in
+                            if let index = journeys.firstIndex(where: { $0.id == newJourney.id }) {
+                                journeys[index] = newJourney
+                            } else {
+                                journeys.append(newJourney)
+                            }
+                        }
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: .black.opacity(0.25), radius: 20)
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: showCreateSheet)
     }
 }
 
-// ==========================================
-// 3. PREVIEW CANVAS ANCHOR
-// ==========================================
-#Preview {
-    JourneysViews(
-        journeys: [
-            JourneyItem(title: "Summer in Europe", description: "Exploring coastal cities, train transfers, and shared highlights.", dateRangeString: "05/12/2026 — Ongoing", collaboratorCount: 3, coverImageName: nil, isOngoing: true),
-            JourneyItem(title: "Trace Architecture Shift", description: "Documenting the transition from JavaScript to native SwiftUI states.", dateRangeString: "04/01/2026 — 05/20/2026", collaboratorCount: 1, coverImageName: nil, isOngoing: false)
-        ],
-        recentActivities: [
-            ActivityLogItem(message: "Updated timeline constraints", timestamp: "Just now"),
-            ActivityLogItem(message: "Shared 'Summer in Europe' context", timestamp: "2 hours ago")
-        ],
-        showCreateSheet: .constant(false),
-        showFeedbackSheet: .constant(false)
-    )
-    .frame(width: 950, height: 650)
+private struct JourneySearchCapsule: View {
+    @Binding var searchText: String
+    @Binding var isActive: Bool
+    
+    private let collapsedWidth: CGFloat = 30
+    private let expandedWidth: CGFloat = 240
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(isActive ? AppTheme.roseGoldDark : AppTheme.roseGoldDark.opacity(0.7))
+                .frame(width: 14)
+            
+            if isActive {
+                NativeSearchField(
+                    text: $searchText,
+                    placeholder: "Search journeys...",
+                    chrome: .plain,
+                    autoFocus: true,
+                    onCommit: {},
+                    onFocusLost: { collapse() }
+                )
+                .frame(height: 20)
+                .transition(.opacity)
+                
+                Button(action: { collapse() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(AppTheme.primaryText.opacity(0.3))
+                }
+                .buttonStyle(.plain)
+                .transition(.opacity)
+            }
+        }
+        .padding(.horizontal, isActive ? 12 : 8)
+        .frame(width: isActive ? expandedWidth : collapsedWidth, height: 30, alignment: .leading)
+        .background(AppTheme.roseGoldLight.opacity(isActive ? 0.18 : 0.1))
+        .clipShape(Capsule())
+        .overlay(
+            Capsule()
+                .stroke(AppTheme.roseGoldLight.opacity(isActive ? 0.4 : 0.25), lineWidth: AppTheme.thinLineWidth)
+        )
+        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: isActive)
+        .onTapGesture {
+            if !isActive {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                    isActive = true
+                }
+            }
+        }
+        .help("Search Journeys")
+    }
+    
+    private func collapse() {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+            isActive = false
+            searchText = ""
+        }
+    }
 }

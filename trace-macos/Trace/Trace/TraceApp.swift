@@ -12,11 +12,36 @@ struct TraceApp: App {
     @State private var appState = AppState()
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
+    // TODO: these are still hardcoded mock data, same as before — just
+    // promoted to @State so `journeys` has something real to bind to for
+    // delete/edit. Once the backend is wired up (last on the list), these
+    // should probably be sourced from `appState` instead of living here.
+    @State private var showCreateSheet = false
+    @State private var showFeedbackSheet = false
+    @State private var journeys: [JourneyItem] = [
+        JourneyItem(title: "Summer in Europe", description: "Exploring coastal cities, train transfers, and shared highlights.", dateRangeString: "05/12/2026 — Ongoing", collaboratorCount: 3, coverImageName: nil, isOngoing: true),
+        JourneyItem(title: "Trace Architecture Shift", description: "Documenting the transition from JavaScript to native SwiftUI states.", dateRangeString: "04/01/2026 — 05/20/2026", collaboratorCount: 1, coverImageName: nil, isOngoing: false)
+    ]
+    @State private var recentActivities: [ActivityLogItem] = [
+        ActivityLogItem(message: "Updated timeline constraints", timestamp: "Just now"),
+        ActivityLogItem(message: "Shared 'Summer in Europe' context", timestamp: "2 hours ago")
+    ]
+    
     var body: some Scene {
         WindowGroup {
-            TimelineCanvasView(journeyTitle: "Test Journey", journeyDescription: "Test Descripton")
-                .environment(appState)
-                .background(WindowConfigurator())
+            JourneysViews(
+                journeys: $journeys,
+                recentActivities: recentActivities,
+                showCreateSheet: $showCreateSheet,
+                showFeedbackSheet: $showFeedbackSheet,
+                onOpenJourney: { journey in
+                    // TODO: navigation isn't built yet — this is the same
+                    // gap flagged before (Journey card -> its Events
+                    // timeline). Stubbed for now so it compiles and you can
+                    // verify the click itself fires correctly.
+                    print("Open journey: \(journey.title)")
+                }
+            )
         }
     }
 }
@@ -86,3 +111,4 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 }
+
