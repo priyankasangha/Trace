@@ -17,7 +17,6 @@ struct TraceApp: App {
     // delete/edit. Once the backend is wired up (last on the list), these
     // should probably be sourced from `appState` instead of living here.
     @State private var showCreateSheet = false
-    @State private var showFeedbackSheet = false
     @State private var journeys: [JourneyItem] = [
         JourneyItem(title: "Summer in Europe", description: "Exploring coastal cities, train transfers, and shared highlights.", dateRangeString: "05/12/2026 — Ongoing", collaboratorCount: 3, coverImageName: nil, isOngoing: true),
         JourneyItem(title: "Trace Architecture Shift", description: "Documenting the transition from JavaScript to native SwiftUI states.", dateRangeString: "04/01/2026 — 05/20/2026", collaboratorCount: 1, coverImageName: nil, isOngoing: false)
@@ -33,7 +32,6 @@ struct TraceApp: App {
                 journeys: $journeys,
                 recentActivities: recentActivities,
                 showCreateSheet: $showCreateSheet,
-                showFeedbackSheet: $showFeedbackSheet,
                 onOpenJourney: { journey in
                     // TODO: navigation isn't built yet — this is the same
                     // gap flagged before (Journey card -> its Events

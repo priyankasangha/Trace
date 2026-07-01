@@ -13,9 +13,9 @@ struct TimelineCanvasView: View {
     let journeyTitle: String
     let journeyDescription: String
     
-    @State private var showFeedbackSheet: Bool = false
     @State private var showEventSheet: Bool = false
     @State private var showDeleteConfirmation: Bool = false
+    @State private var showFeedbackSheet: Bool = false
     @State private var selectedEvent: TimelineEventStub? = nil
     @State private var focusedEventId: UUID? = nil
     
@@ -187,13 +187,7 @@ struct TimelineCanvasView: View {
                 focusedEventId = nil
             }
         ))
-        .sheet(isPresented: $showFeedbackSheet) {
-            // NOTE: this previously pointed at a local FeedbackCornerSheet
-            // stub defined at the bottom of this file. You already have a
-            // Views/ShreysFeedback folder — wire this up to whatever real
-            // view lives there instead of the placeholder that was removed.
-            Text("TODO: wire up to Views/ShreysFeedback")
-        }
+        .modifier(FeedbackOverlayModifier(isPresented: $showFeedbackSheet))
     }
 }
 

@@ -5,7 +5,6 @@ struct AppSidebarView: View {
     let totalTimelinesCount: Int
     let recentActivities: [ActivityLogItem]
     @Binding var showFeedbackSheet: Bool
-    
     // Smooth layout interaction states
     @State private var footerHeartScale: CGFloat = 1.0
     @State private var feedbackCardHovered: Bool = false

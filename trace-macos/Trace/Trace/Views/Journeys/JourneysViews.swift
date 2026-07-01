@@ -17,7 +17,6 @@ struct JourneysViews: View {
     let recentActivities: [ActivityLogItem]
     
     @Binding var showCreateSheet: Bool
-    @Binding var showFeedbackSheet: Bool
     
     var onOpenJourney: (JourneyItem) -> Void
     
@@ -26,6 +25,7 @@ struct JourneysViews: View {
     
     @State private var selectedJourney: JourneyItem? = nil
     @State private var showDeleteConfirmation: Bool = false
+    @State private var showFeedbackSheet: Bool = false
     
     private func dismissCreateSheet() {
         showCreateSheet = false
@@ -173,6 +173,7 @@ struct JourneysViews: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: showCreateSheet)
+        .modifier(FeedbackOverlayModifier(isPresented: $showFeedbackSheet))
     }
 }
 
