@@ -1,18 +1,11 @@
 import SwiftUI
 
 // ==========================================
-// 1. DATA MODELS
+// 1. DATA MODEL
+//    (JourneyItem lives in Views/Journeys/Models/JourneyItem.swift —
+//    ActivityLogItem stays here since it's small and only meaningfully
+//    used alongside this view and AppSidebarView)
 // ==========================================
-struct JourneyItem: Identifiable {
-    let id = UUID()
-    let title: String
-    let description: String
-    let dateRangeString: String
-    let collaboratorCount: Int
-    let coverImageName: String?
-    let isOngoing: Bool
-}
-
 struct ActivityLogItem: Identifiable {
     let id = UUID()
     let message: String
@@ -21,6 +14,10 @@ struct ActivityLogItem: Identifiable {
 
 // ==========================================
 // 2. MAIN JOURNEYS INTERFACE (WITH SIDEBAR)
+//
+// JourneyCardView -> Views/Journeys/Components/JourneyCardView.swift
+// fineLineBorder() -> already defined in your design system file
+// (the FineLineBorder ViewModifier) — not redefined here
 // ==========================================
 struct JourneysViews: View {
     let journeys: [JourneyItem]
@@ -29,9 +26,21 @@ struct JourneysViews: View {
     @Binding var showCreateSheet: Bool
     @Binding var showFeedbackSheet: Bool // Bound to the sidebar's interactive card
     
+    @State private var searchText: String = ""
+    @State private var isSearchActive: Bool = false
+    
     private let columns = [
         GridItem(.adaptive(minimum: 240, maximum: 340), spacing: 20)
     ]
+    
+    private var filteredJourneys: [JourneyItem] {
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return journeys }
+        return journeys.filter {
+            $0.title.localizedCaseInsensitiveContains(trimmed) ||
+            $0.description.localizedCaseInsensitiveContains(trimmed)
+        }
+    }
     
     var body: some View {
         HSplitView {
@@ -57,20 +66,64 @@ struct JourneysViews: View {
                     
                     Spacer()
                     
-                    Button(action: { showCreateSheet.toggle() }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "plus")
-                                .font(.system(size: 11, weight: .bold))
-                            Text("New Journey")
-                                .font(AppTheme.subtitle)
+                    HStack(spacing: 10) {
+                        if isSearchActive {
+                            HStack(spacing: 6) {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(AppTheme.primaryText.opacity(0.4))
+                                
+                                NativeSearchField(text: $searchText, placeholder: "Search journeys...") {}
+                                    .frame(width: 200, height: 22)
+                                
+                                Button(action: {
+                                    withAnimation(.easeOut(duration: 0.15)) {
+                                        isSearchActive = false
+                                        searchText = ""
+                                    }
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(AppTheme.primaryText.opacity(0.3))
+                                        .font(.system(size: 12))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color(nsColor: .controlBackgroundColor))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .fineLineBorder()
+                            .transition(.move(edge: .trailing).combined(with: .opacity))
+                        } else {
+                            Button(action: {
+                                withAnimation(.easeOut(duration: 0.15)) {
+                                    isSearchActive = true
+                                }
+                            }) {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(AppTheme.roseGoldDark)
+                                    .frame(width: 28, height: 28)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Search Journeys")
                         }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 7)
-                        .background(AppTheme.roseGoldDark)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        
+                        Button(action: { showCreateSheet.toggle() }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 11, weight: .bold))
+                                Text("New Journey")
+                                    .font(AppTheme.subtitle)
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .background(AppTheme.roseGoldDark)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 32)
                 .padding(.top, AppTheme.windowTopSafetyPadding + 12)
@@ -78,13 +131,26 @@ struct JourneysViews: View {
                 
                 // GRID CANVAS
                 ScrollView(.vertical, showsIndicators: true) {
-                    LazyVGrid(columns: columns, spacing: 24) {
-                        ForEach(journeys) { journey in
-                            JourneyCardView(journey: journey)
+                    if filteredJourneys.isEmpty {
+                        VStack(spacing: 8) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 22))
+                                .foregroundColor(AppTheme.primaryText.opacity(0.25))
+                            Text("No journeys match \"\(searchText)\"")
+                                .font(AppTheme.body)
+                                .foregroundColor(AppTheme.primaryText.opacity(0.5))
                         }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 80)
+                    } else {
+                        LazyVGrid(columns: columns, spacing: 24) {
+                            ForEach(filteredJourneys) { journey in
+                                JourneyCardView(journey: journey)
+                            }
+                        }
+                        .padding(.horizontal, 32)
+                        .padding(.bottom, 32)
                     }
-                    .padding(.horizontal, 32)
-                    .padding(.bottom, 32)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -94,103 +160,7 @@ struct JourneysViews: View {
 }
 
 // ==========================================
-// 3. EDITORIAL JOURNEY DISPLAY CARD
-// ==========================================
-struct JourneyCardView: View {
-    let journey: JourneyItem
-    @State private var isHovered = false
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ZStack(alignment: .topTrailing) {
-                if let _ = journey.coverImageName {
-                    Color.gray
-                } else {
-                    LinearGradient(
-                        colors: [AppTheme.roseGoldLight.opacity(0.6), AppTheme.roseGoldBase.opacity(0.3)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                }
-                
-                if journey.isOngoing {
-                    Text("Ongoing")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(AppTheme.roseGoldDark)
-                        .clipShape(Capsule())
-                        .padding(10)
-                }
-            }
-            .frame(height: 115)
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Text(journey.title)
-                    .font(AppTheme.title)
-                    .foregroundColor(AppTheme.primaryText)
-                    .lineLimit(1)
-                
-                Text(journey.description)
-                    .font(AppTheme.body)
-                    .foregroundColor(AppTheme.primaryText.opacity(0.7))
-                    .lineLimit(2)
-                    .frame(height: 34, alignment: .top)
-                
-                SkinnyDivider()
-                    .padding(.vertical, 4)
-                
-                HStack {
-                    HStack(spacing: 5) {
-                        Circle()
-                            .fill(AppTheme.roseGoldDark.opacity(0.7))
-                            .frame(width: 5, height: 5)
-                        
-                        Text(journey.dateRangeString)
-                            .font(.system(size: 11, weight: .medium))
-                    }
-                    .foregroundColor(AppTheme.primaryText.opacity(AppTheme.accentOpacity))
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 3) {
-                        Image(systemName: "person.2.fill")
-                            .font(.system(size: 10))
-                        Text("\(journey.collaboratorCount)")
-                            .font(.system(size: 11, weight: .bold))
-                    }
-                    .foregroundColor(AppTheme.roseGoldDark)
-                }
-            }
-            .padding(16)
-            .background(Color(nsColor: .controlBackgroundColor))
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .fineLineBorder()
-        .scaleEffect(isHovered ? 1.015 : 1.0)
-        .shadow(color: Color.black.opacity(isHovered ? 0.04 : 0.0), radius: 8, x: 0, y: 4)
-        .animation(.easeOut(duration: 0.2), value: isHovered)
-        .onHover { hovering in
-            isHovered = hovering
-        }
-    }
-}
-
-// ==========================================
-// 4. COMMON VIEW EXTENSIONS
-// ==========================================
-extension View {
-    func fineLineBorder(color: Color = AppTheme.primaryText.opacity(0.1)) -> some View {
-        self.overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(color, lineWidth: AppTheme.thinLineWidth)
-        )
-    }
-}
-
-// ==========================================
-// 5. PREVIEW CANVAS ANCHOR
+// 3. PREVIEW CANVAS ANCHOR
 // ==========================================
 #Preview {
     JourneysViews(
