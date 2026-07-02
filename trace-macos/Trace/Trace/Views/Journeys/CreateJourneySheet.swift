@@ -39,7 +39,7 @@ struct CreateJourneySheet: View {
             onPrimary: saveJourney
         ) {
             VStack(alignment: .leading, spacing: 12) {
-                FormSectionHeader(text: "Visual Accent")
+                FormSectionHeader(text: "VISUAL ACCENT")
                 
                 CustomFormRow(label: "Cover Photo") {
                     CoverImagePicker(selectedItem: $selectedItem, coverImage: $coverImage)

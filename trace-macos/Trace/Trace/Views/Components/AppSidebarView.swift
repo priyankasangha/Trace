@@ -1,5 +1,4 @@
 import SwiftUI
-import AppKit
 
 struct AppSidebarView: View {
     let totalTimelinesCount: Int

@@ -79,8 +79,9 @@ struct FeedbackCornerSheet: View {
     }
 }
 
-struct FeedbackOverlayModifier: ViewModifier {
+struct SheetOverlayModifier<SheetContent: View>: ViewModifier {
     @Binding var isPresented: Bool
+    @ViewBuilder var sheetContent: () -> SheetContent
     
     func body(content: Content) -> some View {
         content
@@ -91,7 +92,7 @@ struct FeedbackOverlayModifier: ViewModifier {
                             .ignoresSafeArea()
                             .onTapGesture { isPresented = false }
                         
-                        FeedbackCornerSheet(onDismiss: { isPresented = false })
+                        sheetContent()
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                             .shadow(color: .black.opacity(0.25), radius: 20)
                     }

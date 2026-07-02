@@ -8,7 +8,6 @@ import AppKit
 struct CreateEventSheet: View {
     var onDismiss: () -> Void
     
-    // Explicit alignment metrics for form fields
     private let formLabelWidth: CGFloat = 110
     
     // Dynamic Header & Identity Bindings
@@ -27,11 +26,6 @@ struct CreateEventSheet: View {
     @State private var includeTime: Bool = false
     @State private var hourSelection: Int = 12
     @State private var minuteSelection: Int = 0
-    
-    // Geolocation Context Strings
-    @State private var locationName: String = ""
-    @State private var latitudeString: String = ""
-    @State private var longitudeString: String = ""
     
     // Simplified PhotosPicker States — single cover image only
     @State private var selectedCoverItem: PhotosPickerItem? = nil
@@ -57,7 +51,7 @@ struct CreateEventSheet: View {
             VStack(alignment: .leading, spacing: 12) {
                 FormSectionHeader(text: "MEDIA ACCENTS")
                 
-                FormRow(label: "Cover Image", labelWidth: formLabelWidth) {
+                CustomFormRow(label: "Cover Image", labelWidth: formLabelWidth) {
                     CoverImagePicker(selectedItem: $selectedCoverItem, coverImage: $coverImage)
                 }
             }
@@ -66,12 +60,12 @@ struct CreateEventSheet: View {
             VStack(alignment: .leading, spacing: 12) {
                 FormSectionHeader(text: "GENERAL IDENTITY")
                 
-                FormRow(label: "Title", labelWidth: formLabelWidth) {
+                CustomFormRow(label: "Title", labelWidth: formLabelWidth) {
                     TextField("Enter event title...", text: $title)
                         .styledInput()
                 }
                 
-                FormRow(label: "Description", labelWidth: formLabelWidth) {
+                CustomFormRow(label: "Description", labelWidth: formLabelWidth) {
                     TextField("Brief subtitle summaries...", text: $description, axis: .vertical)
                         .lineLimit(2...3)
                         .styledInput()
@@ -82,7 +76,7 @@ struct CreateEventSheet: View {
             VStack(alignment: .leading, spacing: 12) {
                 FormSectionHeader(text: "CHRONOLOGY")
                 
-                FormRow(label: "Timeline Context", labelWidth: formLabelWidth) {
+                CustomFormRow(label: "Timeline Context", labelWidth: formLabelWidth) {
                     HStack(spacing: 6) {
                         Picker("", selection: $year) {
                             ForEach(1900...2100, id: \.self) { y in
@@ -125,7 +119,7 @@ struct CreateEventSheet: View {
                     .animation(.interactiveSpring(response: 0.2, dampingFraction: 0.85), value: includeDay)
                 }
                 
-                FormRow(label: "Exact Clock", labelWidth: formLabelWidth) {
+                CustomFormRow(label: "Exact Clock", labelWidth: formLabelWidth) {
                     HStack(spacing: 8) {
                         Toggle("Enable Time", isOn: $includeTime)
                             .toggleStyle(.checkbox)

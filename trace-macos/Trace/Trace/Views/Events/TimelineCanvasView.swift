@@ -5,8 +5,8 @@ import AppKit
 // TIMELINE CANVAS VIEW WITH SPLIT SIDEBAR LAYOUT
 //
 // TimelineEventStub -> Models/TimelineEventStub.swift
-// BoundedVerticalMilestoneRow, MilestoneRowContainer -> Views/Events/Components/MilestoneRow.swift
-// MilestoneActionButtons -> Views/Events/Components/MilestoneActionButtons.swift
+// BoundedVerticalEventRow, EventRowContainer -> Views/Events/Components/EventRow.swift
+// EditDeleteButtons -> Views/Components/EditDeleteButtons.swift
 // DeleteConfirmationModifier -> Views/Components/DeleteConfirmationModifier.swift
 // =========================================================================
 struct TimelineCanvasView: View {
@@ -187,22 +187,9 @@ struct TimelineCanvasView: View {
         }
         .frame(minWidth: 1150, minHeight: 700)
         
-        // --- EVENT SHEET OVERLAY ---
-        .overlay {
-            if showEventSheet {
-                ZStack {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                        .onTapGesture { dismissEventSheet() }
-                    
-                    CreateEventSheet(onDismiss: { dismissEventSheet() })
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .shadow(color: .black.opacity(0.25), radius: 20)
-                }
-                .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: showEventSheet)
+        .modifier(SheetOverlayModifier(isPresented: $showEventSheet) {
+            CreateEventSheet(onDismiss: { dismissEventSheet() })
+        })
         .modifier(DeleteConfirmationModifier(
             isPresented: $showDeleteConfirmation,
             selectedItem: $selectedEvent,
@@ -213,7 +200,9 @@ struct TimelineCanvasView: View {
                 focusedEventId = nil
             }
         ))
-        .modifier(FeedbackOverlayModifier(isPresented: $showFeedbackSheet))
+        .modifier(SheetOverlayModifier(isPresented: $showFeedbackSheet) {
+            FeedbackCornerSheet(onDismiss: { showFeedbackSheet = false })
+        })
     }
 }
 

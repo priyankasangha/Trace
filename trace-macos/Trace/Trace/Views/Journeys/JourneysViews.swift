@@ -148,32 +148,22 @@ struct JourneysViews: View {
                 journeys.removeAll(where: { $0.id == journey.id })
             }
         ))
-        .overlay {
-            if showCreateSheet {
-                ZStack {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                        .onTapGesture { dismissCreateSheet() }
-                    
-                    CreateJourneySheet(
-                        editingJourney: selectedJourney,
-                        onDismiss: { dismissCreateSheet() },
-                        onSave: { newJourney in
-                            if let index = journeys.firstIndex(where: { $0.id == newJourney.id }) {
-                                journeys[index] = newJourney
-                            } else {
-                                journeys.append(newJourney)
-                            }
-                        }
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .shadow(color: .black.opacity(0.25), radius: 20)
+        .modifier(SheetOverlayModifier(isPresented: $showCreateSheet) {
+            CreateJourneySheet(
+                editingJourney: selectedJourney,
+                onDismiss: { dismissCreateSheet() },
+                onSave: { newJourney in
+                    if let index = journeys.firstIndex(where: { $0.id == newJourney.id }) {
+                        journeys[index] = newJourney
+                    } else {
+                        journeys.append(newJourney)
+                    }
                 }
-                .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: showCreateSheet)
-        .modifier(FeedbackOverlayModifier(isPresented: $showFeedbackSheet))
+            )
+        })
+        .modifier(SheetOverlayModifier(isPresented: $showFeedbackSheet) {
+            FeedbackCornerSheet(onDismiss: { showFeedbackSheet = false })
+        })
     }
 }
 

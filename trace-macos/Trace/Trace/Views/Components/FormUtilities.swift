@@ -18,30 +18,6 @@ struct FormSectionHeader: View {
     }
 }
 
-struct FormRow<Content: View>: View {
-    let label: String
-    let labelWidth: CGFloat
-    let content: Content
-    
-    init(label: String, labelWidth: CGFloat, @ViewBuilder content: () -> Content) {
-        self.label = label
-        self.labelWidth = labelWidth
-        self.content = content()
-    }
-    
-    var body: some View {
-        HStack(alignment: .center, spacing: 16) {
-            Text(label)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(AppTheme.primaryText.opacity(0.7))
-                .frame(width: labelWidth, alignment: .leading)
-            
-            content
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-}
-
 // ==========================================
 // VIEW EXTENSIONS & SHAPE MODIFIERS
 // ==========================================
@@ -62,10 +38,12 @@ extension View {
 
 struct CustomFormRow<Content: View>: View {
     var label: String
+    var labelWidth: CGFloat
     var content: Content
     
-    init(label: String, @ViewBuilder content: () -> Content) {
+    init(label: String, labelWidth: CGFloat = 100, @ViewBuilder content: () -> Content) {
         self.label = label
+        self.labelWidth = labelWidth
         self.content = content()
     }
     
@@ -74,7 +52,7 @@ struct CustomFormRow<Content: View>: View {
             Text(label)
                 .font(AppTheme.subtitle)
                 .foregroundColor(AppTheme.primaryText.opacity(AppTheme.accentOpacity))
-                .frame(width: 100, alignment: .leading)
+                .frame(width: labelWidth, alignment: .leading)
             
             content
                 .frame(maxWidth: .infinity, alignment: .leading)
