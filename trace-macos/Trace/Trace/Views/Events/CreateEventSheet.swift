@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 import AppKit
+import MapKit
 
 // ==========================================
 // 1. MAIN EVENT SHEET (TRACE APP CORE)
@@ -26,6 +27,12 @@ struct CreateEventSheet: View {
     @State private var includeTime: Bool = false
     @State private var hourSelection: Int = 12
     @State private var minuteSelection: Int = 0
+    
+    // Location
+    @StateObject private var locationSearchService = LocationSearchService()
+    @State private var locationName: String = ""
+    @State private var latitudeString: String = ""
+    @State private var longitudeString: String = ""
     
     // Simplified PhotosPicker States — single cover image only
     @State private var selectedCoverItem: PhotosPickerItem? = nil
@@ -154,7 +161,19 @@ struct CreateEventSheet: View {
                 }
             }
             
-            // SECTION 4: LONG-FORM JOURNAL ENTRY
+            // SECTION 4: LOCATION
+            VStack(alignment: .leading, spacing: 12) {
+                FormSectionHeader(text: "LOCATION")
+                
+                MapLocationPicker(
+                    searchService: locationSearchService,
+                    locationName: $locationName,
+                    latitudeString: $latitudeString,
+                    longitudeString: $longitudeString
+                )
+            }
+            
+            // SECTION 5: LONG-FORM JOURNAL
             VStack(alignment: .leading, spacing: 12) {
                 FormSectionHeader(text: "LONG-FORM JOURNAL")
                 
@@ -163,7 +182,7 @@ struct CreateEventSheet: View {
                     .styledInput()
             }
             
-            // SECTION 5: AUTOMATION CONTROLS
+            // SECTION 6: AUTOMATION CONTROLS
             VStack(alignment: .leading, spacing: 14) {
                 Toggle(isOn: $anniversaryEnabled) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -197,7 +216,7 @@ struct CreateEventSheet: View {
             .background(AppTheme.roseGoldLight.opacity(0.06))
             .cornerRadius(8)
         }
-        .frame(width: 480, height: 620)
+        .frame(width: 480, height: 700)
     }
     
     private func saveMilestone() {
