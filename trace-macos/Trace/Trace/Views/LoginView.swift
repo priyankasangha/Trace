@@ -133,14 +133,12 @@ struct LoginView: View {
             }
             
         case .failure(let error):
-            print("❌ Native authorization cancelled or failed: \(error.localizedDescription)")
-            DispatchQueue.main.async { appState.isLoggedIn = true }
+            print("Sign in cancelled or failed: \(error.localizedDescription)")
         }
     }
     
     private func authenticateUserWithBackend(payload: [String: String]) {
         guard let url = URL(string: "http://localhost:3000/api/auth/apple") else {
-            DispatchQueue.main.async { appState.isLoggedIn = true }
             return
         }
         
@@ -151,12 +149,18 @@ struct LoginView: View {
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         } catch {
-            DispatchQueue.main.async { appState.isLoggedIn = true }
             return
         }
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
+                if let data = data,
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let token = json["token"] as? String {
+                    appState.authToken = token
+                    EventService.shared.authToken = token
+                    JourneyService.shared.authToken = token
+                }
                 appState.isLoggedIn = true
             }
         }.resume()

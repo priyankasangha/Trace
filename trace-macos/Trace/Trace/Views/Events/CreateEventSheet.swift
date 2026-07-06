@@ -8,6 +8,8 @@ import MapKit
 // ==========================================
 struct CreateEventSheet: View {
     var onDismiss: () -> Void
+    var onSave: ((EventPayload) -> Void)? = nil
+    var editingEvent: Event? = nil
     
     private let formLabelWidth: CGFloat = 110
     
@@ -42,8 +44,14 @@ struct CreateEventSheet: View {
     @State private var anniversaryEnabled: Bool = false
     @State private var isVisibleInHighlights: Bool = true
     
+    private var isEditing: Bool { editingEvent != nil }
+    
     private var displayTitle: String {
-        title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Create New Event" : title
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            return isEditing ? "Edit Event" : "Create New Event"
+        }
+        return trimmed
     }
     
     var body: some View {
@@ -217,9 +225,49 @@ struct CreateEventSheet: View {
             .cornerRadius(8)
         }
         .frame(width: 480, height: 700)
+        .onAppear {
+            guard let event = editingEvent else { return }
+            title = event.title
+            description = event.description ?? ""
+            year = event.year
+            if let m = event.month {
+                includeMonth = true
+                monthSelection = m
+                if let d = event.day {
+                    includeDay = true
+                    daySelection = d
+                } else {
+                    includeDay = false
+                }
+            } else {
+                includeMonth = false
+                includeDay = false
+            }
+            locationName = event.locationName ?? ""
+            if let lat = event.latitude { latitudeString = String(lat) }
+            if let lon = event.longitude { longitudeString = String(lon) }
+            journal = event.journal ?? ""
+            anniversaryEnabled = event.anniversaryEnabled
+            isVisibleInHighlights = event.isVisibleInHighlights
+        }
     }
     
     private func saveMilestone() {
+        let payload = EventPayload(
+            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+            description: description.isEmpty ? nil : description,
+            year: year,
+            month: includeMonth ? monthSelection : nil,
+            day: (includeMonth && includeDay) ? daySelection : nil,
+            locationName: locationName.isEmpty ? nil : locationName,
+            latitude: Double(latitudeString),
+            longitude: Double(longitudeString),
+            coverImage: nil,
+            journal: journal.isEmpty ? nil : journal,
+            anniversaryEnabled: anniversaryEnabled,
+            isVisibleInHighlights: isVisibleInHighlights
+        )
+        onSave?(payload)
         onDismiss()
     }
 }

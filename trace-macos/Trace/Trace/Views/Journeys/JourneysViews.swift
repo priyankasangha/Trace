@@ -13,23 +13,32 @@ struct ActivityLogItem: Identifiable {
 // MAIN JOURNEYS INTERFACE
 // ==========================================
 struct JourneysViews: View {
-    @Binding var journeys: [JourneyItem]
     let recentActivities: [ActivityLogItem]
-    
-    @Binding var showCreateSheet: Bool
-    
     var onOpenJourney: (JourneyItem) -> Void
     
+    // API-backed journeys + their UI representations
+    @State private var apiJourneys: [Journey] = []
+    @State private var journeyItems: [JourneyItem] = []
+    @State private var itemToJourneyId: [UUID: Int] = [:]
+    
+    @State private var showCreateSheet: Bool = false
     @State private var searchText: String = ""
     @State private var isSearchActive: Bool = false
     
     @State private var selectedJourney: JourneyItem? = nil
+    @State private var editingJourney: Journey? = nil
     @State private var showDeleteConfirmation: Bool = false
     @State private var showFeedbackSheet: Bool = false
+    
+    private func refreshItems() {
+        journeyItems = apiJourneys.map { $0.toItem() }
+        itemToJourneyId = Dictionary(uniqueKeysWithValues: zip(journeyItems.map(\.id), apiJourneys.map(\.id)))
+    }
     
     private func dismissCreateSheet() {
         showCreateSheet = false
         selectedJourney = nil
+        editingJourney = nil
     }
     
     private let columns = [
@@ -38,8 +47,8 @@ struct JourneysViews: View {
     
     private var filteredJourneys: [JourneyItem] {
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return journeys }
-        return journeys.filter {
+        guard !trimmed.isEmpty else { return journeyItems }
+        return journeyItems.filter {
             $0.title.localizedCaseInsensitiveContains(trimmed) ||
             $0.description.localizedCaseInsensitiveContains(trimmed)
         }
@@ -48,7 +57,7 @@ struct JourneysViews: View {
     var body: some View {
         HSplitView {
             AppSidebarView(
-                totalTimelinesCount: journeys.count,
+                totalTimelinesCount: journeyItems.count,
                 recentActivities: recentActivities,
                 showFeedbackSheet: $showFeedbackSheet
             )
@@ -72,6 +81,7 @@ struct JourneysViews: View {
                         // FIXED: Clears selection explicitly so the sheet re-evaluates as a fresh creation modal
                         Button(action: {
                             selectedJourney = nil
+                            editingJourney = nil
                             showCreateSheet = true
                         }) {
                             HStack(spacing: 6) {
@@ -113,6 +123,9 @@ struct JourneysViews: View {
                                     onOpen: { onOpenJourney(journey) },
                                     onEdit: {
                                         selectedJourney = journey
+                                        if let apiId = itemToJourneyId[journey.id] {
+                                            editingJourney = apiJourneys.first(where: { $0.id == apiId })
+                                        }
                                         showCreateSheet = true
                                     },
                                     onDelete: {
@@ -145,18 +158,44 @@ struct JourneysViews: View {
             itemLabel: "Journey",
             displayName: { $0.title },
             onDelete: { journey in
-                journeys.removeAll(where: { $0.id == journey.id })
+                if let apiId = itemToJourneyId[journey.id] {
+                    Task {
+                        do {
+                            try await JourneyService.shared.deleteJourney(journeyId: apiId)
+                            apiJourneys.removeAll(where: { $0.id == apiId })
+                            refreshItems()
+                        } catch {
+                            print("Delete journey failed: \(error.localizedDescription)")
+                        }
+                    }
+                }
             }
         ))
         .modifier(SheetOverlayModifier(isPresented: $showCreateSheet) {
             CreateJourneySheet(
-                editingJourney: selectedJourney,
+                editingJourney: editingJourney,
                 onDismiss: { dismissCreateSheet() },
-                onSave: { newJourney in
-                    if let index = journeys.firstIndex(where: { $0.id == newJourney.id }) {
-                        journeys[index] = newJourney
-                    } else {
-                        journeys.append(newJourney)
+                onSave: { payload in
+                    Task {
+                        if let existing = editingJourney {
+                            do {
+                                let updated = try await JourneyService.shared.updateJourney(journeyId: existing.id, payload: payload)
+                                if let idx = apiJourneys.firstIndex(where: { $0.id == existing.id }) {
+                                    apiJourneys[idx] = updated
+                                }
+                                refreshItems()
+                            } catch {
+                                print("Update journey failed: \(error.localizedDescription)")
+                            }
+                        } else {
+                            do {
+                                let created = try await JourneyService.shared.createJourney(payload: payload)
+                                apiJourneys.append(created)
+                                refreshItems()
+                            } catch {
+                                print("Create journey failed: \(error.localizedDescription)")
+                            }
+                        }
                     }
                 }
             )
@@ -164,6 +203,15 @@ struct JourneysViews: View {
         .modifier(SheetOverlayModifier(isPresented: $showFeedbackSheet) {
             FeedbackCornerSheet(onDismiss: { showFeedbackSheet = false })
         })
+        .task {
+            do {
+                apiJourneys = try await JourneyService.shared.fetchJourneys()
+            } catch {
+                print("Failed to load journeys, using mock data: \(error.localizedDescription)")
+                apiJourneys = Journey.mockJourneys
+            }
+            refreshItems()
+        }
     }
 }
 

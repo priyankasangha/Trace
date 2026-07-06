@@ -19,7 +19,13 @@ export async function createJourney(data, user) {
       title: data.title,
       description: data.description,
       coverPage: data.coverPage,
-      isCompleted: data.isCompleted ?? false,
+      completed: data.completed ?? false,
+      startYear: data.startYear ?? null,
+      startMonth: data.startMonth ?? null,
+      startDay: data.startDay ?? null,
+      endYear: data.endYear ?? null,
+      endMonth: data.endMonth ?? null,
+      endDay: data.endDay ?? null,
       participants: {
         create: {
           userId: Number(userId),
@@ -60,7 +66,13 @@ export async function editJourney(data, user, journeyId) {
   if (data.title !== undefined) updateData.title = data.title;
   if (data.description !== undefined) updateData.description = data.description;
   if (data.coverPage !== undefined) updateData.coverPage = data.coverPage;
-  if (data.isCompleted !== undefined) updateData.isCompleted = data.isCompleted;
+  if (data.completed !== undefined) updateData.completed = data.completed;
+  if (data.startYear !== undefined) updateData.startYear = data.startYear;
+  if (data.startMonth !== undefined) updateData.startMonth = data.startMonth;
+  if (data.startDay !== undefined) updateData.startDay = data.startDay;
+  if (data.endYear !== undefined) updateData.endYear = data.endYear;
+  if (data.endMonth !== undefined) updateData.endMonth = data.endMonth;
+  if (data.endDay !== undefined) updateData.endDay = data.endDay;
 
   return await prisma.journey.update({
     where: { id: Number(journeyId) },

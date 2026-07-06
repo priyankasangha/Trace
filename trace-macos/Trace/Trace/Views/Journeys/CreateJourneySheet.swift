@@ -3,9 +3,9 @@ import PhotosUI
 import AppKit
 
 struct CreateJourneySheet: View {
-    var editingJourney: JourneyItem? = nil
+    var editingJourney: Journey? = nil
     var onDismiss: () -> Void
-    var onSave: (JourneyItem) -> Void
+    var onSave: ((JourneyPayload) -> Void)? = nil
     
     // Form State
     @State private var title: String = ""
@@ -26,14 +26,20 @@ struct CreateJourneySheet: View {
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var coverImage: NSImage? = nil
     
+    private var isEditing: Bool { editingJourney != nil }
+    
     private var displayTitle: String {
-        title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "New Timeline" : title
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            return isEditing ? "Edit Journey" : "New Timeline"
+        }
+        return trimmed
     }
     
     var body: some View {
         SheetContainer(
             title: displayTitle,
-            primaryLabel: editingJourney == nil ? "Create" : "Save",
+            primaryLabel: isEditing ? "Save" : "Create",
             isPrimaryDisabled: title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
             onDismiss: onDismiss,
             onPrimary: saveJourney
@@ -145,28 +151,35 @@ struct CreateJourneySheet: View {
         }
         .frame(width: 460, height: 560)
         .onAppear {
-            if let journey = editingJourney {
-                self.title = journey.title
-                self.description = journey.description
-                self.isOngoing = journey.isOngoing
+            guard let journey = editingJourney else { return }
+            title = journey.title
+            description = journey.description ?? ""
+            isOngoing = !journey.completed
+            startYear = journey.startYear
+            startMonth = journey.startMonth
+            startDay = journey.startDay
+            if journey.completed || journey.endYear != nil {
+                endYear = journey.endYear
+                endMonth = journey.endMonth
+                endDay = journey.endDay
             }
         }
     }
     
     private func saveJourney() {
-        let startMonthStr = startMonth != nil ? Calendar.current.shortMonthSymbols[startMonth! - 1] : "01"
-        let dateRangeStr = isOngoing ? "\(startMonthStr) \(startYear ?? 2026) — Ongoing" : "\(startMonthStr) \(startYear ?? 2026) — \(endMonth != nil ? Calendar.current.shortMonthSymbols[endMonth! - 1] : "01") \(endYear ?? 2026)"
-        
-        let item = JourneyItem(
-            id: editingJourney?.id ?? UUID(),
-            title: title,
-            description: description,
-            dateRangeString: dateRangeStr,
-            collaboratorCount: participants.count,
-            coverImageName: nil,
-            isOngoing: isOngoing
+        let payload = JourneyPayload(
+            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+            description: description.isEmpty ? nil : description,
+            coverPage: nil,
+            completed: !isOngoing,
+            startYear: startYear,
+            startMonth: startMonth,
+            startDay: startDay,
+            endYear: isOngoing ? nil : endYear,
+            endMonth: isOngoing ? nil : endMonth,
+            endDay: isOngoing ? nil : endDay
         )
-        onSave(item)
+        onSave?(payload)
         onDismiss()
     }
 }

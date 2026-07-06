@@ -8,4 +8,5 @@ struct JourneyItem: Identifiable {
     let collaboratorCount: Int
     let coverImageName: String?
     let isOngoing: Bool
+    var apiId: Int? = nil
 }

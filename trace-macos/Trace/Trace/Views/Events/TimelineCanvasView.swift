@@ -12,6 +12,7 @@ import AppKit
 struct TimelineCanvasView: View {
     let journeyTitle: String
     let journeyDescription: String
+    var journeyId: Int = 1
     var onBack: (() -> Void)? = nil
     
     @State private var showEventSheet: Bool = false
@@ -20,10 +21,24 @@ struct TimelineCanvasView: View {
     @State private var selectedEvent: TimelineEventStub? = nil
     @State private var focusedEventId: UUID? = nil
     
+    // API-backed events + their stub representations for the UI
+    @State private var events: [Event] = []
+    @State private var eventStubs: [TimelineEventStub] = []
+    
+    // Maps stub UUIDs back to API event IDs for delete/edit
+    @State private var stubToEventId: [UUID: Int] = [:]
+    @State private var editingEvent: Event? = nil
+    
     private func dismissEventSheet() {
         showEventSheet = false
         selectedEvent = nil
+        editingEvent = nil
         focusedEventId = nil
+    }
+    
+    private func refreshStubs() {
+        eventStubs = events.map { $0.toStub() }
+        stubToEventId = Dictionary(uniqueKeysWithValues: zip(eventStubs.map(\.id), events.map(\.id)))
     }
     
     @State private var mockTotalTimelines = 3
@@ -31,30 +46,6 @@ struct TimelineCanvasView: View {
         ActivityLogItem(message: "Updated Weekend Cabin Trip soundscapes", timestamp: "2m ago"),
         ActivityLogItem(message: "Shrey added comments to Architecture Shift", timestamp: "1h ago"),
         ActivityLogItem(message: "Added 3 new nodes to Summer in Europe", timestamp: "Yesterday")
-    ]
-    
-    @State private var sampleEvents: [TimelineEventStub] = [
-        TimelineEventStub(
-            category: "ARCHITECTURE",
-            title: "Project Conception Blueprint",
-            dateString: "MAY 01, 2026",
-            description: "Initial outline of architecture layers written down on paper.",
-            imageName: "doc.text.image"
-        ),
-        TimelineEventStub(
-            category: "DATABASE",
-            title: "Database Schema Finalized",
-            dateString: "MAY 31, 2026",
-            description: "Mapped out all core models and attributes natively in Prisma.",
-            imageName: "macmini"
-        ),
-        TimelineEventStub(
-            category: "INTERFACE",
-            title: "First Fluid UI Prototype",
-            dateString: "JUN 12, 2026",
-            description: "Successfully rendered fluid macOS windows and basic sheets.",
-            imageName: "ipad"
-        )
     ]
     
     var body: some View {
@@ -99,6 +90,7 @@ struct TimelineCanvasView: View {
                         // ACTION TRIGGER
                         Button(action: {
                             selectedEvent = nil
+                            editingEvent = nil
                             showEventSheet = true
                         }) {
                             HStack(spacing: 6) {
@@ -148,7 +140,7 @@ struct TimelineCanvasView: View {
                             .padding(.vertical, 40)
                         
                         VStack(spacing: 60) {
-                            ForEach(Array(sampleEvents.enumerated()), id: \.element.id) { item in
+                            ForEach(Array(eventStubs.enumerated()), id: \.element.id) { item in
                                 EventRowContainer(
                                     event: item.element,
                                     isLeftAligned: item.offset % 2 == 0,
@@ -164,6 +156,9 @@ struct TimelineCanvasView: View {
                                     },
                                     onEdit: {
                                         selectedEvent = item.element
+                                        if let apiId = stubToEventId[item.element.id] {
+                                            editingEvent = events.first(where: { $0.id == apiId })
+                                        }
                                         showEventSheet = true
                                     },
                                     onDelete: {
@@ -188,21 +183,68 @@ struct TimelineCanvasView: View {
         .frame(minWidth: 1150, minHeight: 700)
         
         .modifier(SheetOverlayModifier(isPresented: $showEventSheet) {
-            CreateEventSheet(onDismiss: { dismissEventSheet() })
+            CreateEventSheet(
+                onDismiss: { dismissEventSheet() },
+                onSave: { payload in
+                    Task {
+                        if let existing = editingEvent {
+                            // Update existing event
+                            do {
+                                let updated = try await EventService.shared.updateEvent(journeyId: journeyId, eventId: existing.id, payload: payload)
+                                if let idx = events.firstIndex(where: { $0.id == existing.id }) {
+                                    events[idx] = updated
+                                }
+                                refreshStubs()
+                            } catch {
+                                print("Update event failed: \(error.localizedDescription)")
+                            }
+                        } else {
+                            // Create new event
+                            do {
+                                let created = try await EventService.shared.createEvent(journeyId: journeyId, payload: payload)
+                                events.append(created)
+                                refreshStubs()
+                            } catch {
+                                print("Create event failed: \(error.localizedDescription)")
+                            }
+                        }
+                    }
+                },
+                editingEvent: editingEvent
+            )
         })
         .modifier(DeleteConfirmationModifier(
             isPresented: $showDeleteConfirmation,
             selectedItem: $selectedEvent,
             itemLabel: "Event",
             displayName: { $0.title },
-            onDelete: { event in
-                sampleEvents.removeAll(where: { $0.id == event.id })
+            onDelete: { stub in
+                if let apiId = stubToEventId[stub.id] {
+                    Task {
+                        do {
+                            try await EventService.shared.deleteEvent(journeyId: journeyId, eventId: apiId)
+                            events.removeAll(where: { $0.id == apiId })
+                            refreshStubs()
+                        } catch {
+                            print("Delete event failed: \(error.localizedDescription)")
+                        }
+                    }
+                }
                 focusedEventId = nil
             }
         ))
         .modifier(SheetOverlayModifier(isPresented: $showFeedbackSheet) {
             FeedbackCornerSheet(onDismiss: { showFeedbackSheet = false })
         })
+        .task {
+            do {
+                events = try await EventService.shared.fetchEvents(journeyId: journeyId)
+            } catch {
+                print("Failed to load events, using mock data: \(error.localizedDescription)")
+                events = Event.mockEvents
+            }
+            refreshStubs()
+        }
     }
 }
 

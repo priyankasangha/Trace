@@ -25,7 +25,15 @@ model Journey {
   description  String?
   coverPage    String?
   completed    Boolean       @default(false)
-  
+
+  // Add these:
+  startYear    Int?
+  startMonth   Int?
+  startDay     Int?
+  endYear      Int?
+  endMonth     Int?
+  endDay       Int?
+
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
