@@ -11,7 +11,7 @@ export async function protectWithApple(req, res, next) {
     const identityToken = authHeader.split(' ')[1];
 
     const appleUser = await appleSigninAuth.verifyIdToken(identityToken, {
-      audience: 'your.bundle.id.here',
+      audience: 'com.priyankasangha.Trace',
     });
 
     const user = await userService.findOrCreateAppleUser({

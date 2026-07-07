@@ -111,59 +111,20 @@ struct LoginView: View {
     private func handleAppleSignInCompletion(result: Result<ASAuthorization, Error>) {
         switch result {
         case .success(let auth):
-            if let appleIDCredential = auth.credential as? ASAuthorizationAppleIDCredential {
-                let userIdentifier = appleIDCredential.user
-                let fullName = appleIDCredential.fullName
-                let email = appleIDCredential.email
-                
-                var tokenString = ""
-                if let identityToken = appleIDCredential.identityToken {
-                    tokenString = String(data: identityToken, encoding: .utf8) ?? ""
-                }
-                
-                let actualPayload = [
-                    "appleUserId": userIdentifier,
-                    "identityToken": tokenString,
-                    "email": email ?? "",
-                    "firstName": fullName?.givenName ?? "",
-                    "lastName": fullName?.familyName ?? ""
-                ]
-                
-                authenticateUserWithBackend(payload: actualPayload)
+            if let appleIDCredential = auth.credential as? ASAuthorizationAppleIDCredential,
+               let identityToken = appleIDCredential.identityToken,
+               let tokenString = String(data: identityToken, encoding: .utf8) {
+                // Store the Apple identity token — the backend middleware
+                // verifies it directly on each request
+                appState.authToken = tokenString
+                EventService.shared.authToken = tokenString
+                JourneyService.shared.authToken = tokenString
+                appState.isLoggedIn = true
             }
             
         case .failure(let error):
             print("Sign in cancelled or failed: \(error.localizedDescription)")
         }
-    }
-    
-    private func authenticateUserWithBackend(payload: [String: String]) {
-        guard let url = URL(string: "http://localhost:3000/api/auth/apple") else {
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-        } catch {
-            return
-        }
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                if let data = data,
-                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let token = json["token"] as? String {
-                    appState.authToken = token
-                    EventService.shared.authToken = token
-                    JourneyService.shared.authToken = token
-                }
-                appState.isLoggedIn = true
-            }
-        }.resume()
     }
 }
 

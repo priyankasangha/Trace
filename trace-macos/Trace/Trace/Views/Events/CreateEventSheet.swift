@@ -225,7 +225,7 @@ struct CreateEventSheet: View {
             .cornerRadius(8)
         }
         .frame(width: 480, height: 700)
-        .onAppear {
+        .task(id: editingEvent?.id) {
             guard let event = editingEvent else { return }
             title = event.title
             description = event.description ?? ""

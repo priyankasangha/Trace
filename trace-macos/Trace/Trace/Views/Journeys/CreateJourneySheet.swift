@@ -26,6 +26,8 @@ struct CreateJourneySheet: View {
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var coverImage: NSImage? = nil
     
+
+    
     private var isEditing: Bool { editingJourney != nil }
     
     private var displayTitle: String {
@@ -150,7 +152,7 @@ struct CreateJourneySheet: View {
             }
         }
         .frame(width: 460, height: 560)
-        .onAppear {
+        .task(id: editingJourney?.id) {
             guard let journey = editingJourney else { return }
             title = journey.title
             description = journey.description ?? ""
@@ -158,11 +160,9 @@ struct CreateJourneySheet: View {
             startYear = journey.startYear
             startMonth = journey.startMonth
             startDay = journey.startDay
-            if journey.completed || journey.endYear != nil {
-                endYear = journey.endYear
-                endMonth = journey.endMonth
-                endDay = journey.endDay
-            }
+            endYear = journey.endYear
+            endMonth = journey.endMonth
+            endDay = journey.endDay
         }
     }
     

@@ -176,8 +176,9 @@ struct JourneysViews: View {
                 editingJourney: editingJourney,
                 onDismiss: { dismissCreateSheet() },
                 onSave: { payload in
+                    let existingJourney = editingJourney
                     Task {
-                        if let existing = editingJourney {
+                        if let existing = existingJourney {
                             do {
                                 let updated = try await JourneyService.shared.updateJourney(journeyId: existing.id, payload: payload)
                                 if let idx = apiJourneys.firstIndex(where: { $0.id == existing.id }) {
@@ -199,6 +200,7 @@ struct JourneysViews: View {
                     }
                 }
             )
+            .id(editingJourney?.id)
         })
         .modifier(SheetOverlayModifier(isPresented: $showFeedbackSheet) {
             FeedbackCornerSheet(onDismiss: { showFeedbackSheet = false })
@@ -207,8 +209,8 @@ struct JourneysViews: View {
             do {
                 apiJourneys = try await JourneyService.shared.fetchJourneys()
             } catch {
-                print("Failed to load journeys, using mock data: \(error.localizedDescription)")
-                apiJourneys = Journey.mockJourneys
+                print("Failed to load journeys: \(error.localizedDescription)")
+                apiJourneys = []
             }
             refreshItems()
         }

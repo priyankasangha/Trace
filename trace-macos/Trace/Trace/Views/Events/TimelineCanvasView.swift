@@ -186,8 +186,9 @@ struct TimelineCanvasView: View {
             CreateEventSheet(
                 onDismiss: { dismissEventSheet() },
                 onSave: { payload in
+                    let existingEvent = editingEvent
                     Task {
-                        if let existing = editingEvent {
+                        if let existing = existingEvent {
                             // Update existing event
                             do {
                                 let updated = try await EventService.shared.updateEvent(journeyId: journeyId, eventId: existing.id, payload: payload)
@@ -212,6 +213,7 @@ struct TimelineCanvasView: View {
                 },
                 editingEvent: editingEvent
             )
+            .id(editingEvent?.id)
         })
         .modifier(DeleteConfirmationModifier(
             isPresented: $showDeleteConfirmation,
@@ -240,8 +242,8 @@ struct TimelineCanvasView: View {
             do {
                 events = try await EventService.shared.fetchEvents(journeyId: journeyId)
             } catch {
-                print("Failed to load events, using mock data: \(error.localizedDescription)")
-                events = Event.mockEvents
+                print("Failed to load events: \(error.localizedDescription)")
+                events = []
             }
             refreshStubs()
         }
