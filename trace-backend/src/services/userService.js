@@ -11,27 +11,43 @@ async function ensureUserExists(userId) {
 }
 
 export async function findOrCreateAppleUser(applePayload) {
-  const { email, name } = applePayload;
-  if (!email) throw new Error('Email verification from Apple token is required.');
+  const { appleUserId, email } = applePayload;
 
-  const cleanEmail = email.trim().toLowerCase();
-  let user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+  if (appleUserId) {
+    let user = await prisma.user.findUnique({ where: { appleUserId } });
+    if (user) return user;
+  }
 
-  if (!user) {
+  if (email) {
+    const cleanEmail = email.trim().toLowerCase();
+    let user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+    if (user) {
+      // Attach appleUserId if not set yet
+      if (appleUserId && !user.appleUserId) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { appleUserId },
+        });
+      }
+      return user;
+    }
+
     const fallbackName = cleanEmail.split('@')[0];
-    const formattedName = name 
-      ? `${name.firstName || ''} ${name.lastName || ''}`.trim() 
-      : fallbackName;
-
-    user = await prisma.user.create({
+    return await prisma.user.create({
       data: {
         email: cleanEmail,
-        name: formattedName || fallbackName,
-        profilePic: null, 
+        name: fallbackName,
+        appleUserId,
+        profilePic: null,
       },
     });
   }
-  return user;
+
+  throw new Error('Need either appleUserId or email to find/create user.');
+}
+
+export async function findUserById(id) {
+  return prisma.user.findUnique({ where: { id: Number(id) } });
 }
 
 export async function getUserProfile(userId) {

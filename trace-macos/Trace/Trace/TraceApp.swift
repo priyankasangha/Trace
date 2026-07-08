@@ -22,6 +22,10 @@ struct TraceApp: App {
             if !appState.isLoggedIn {
                 LoginView()
                     .environment(appState)
+                    .onAppear {
+                        // Try to restore saved JWT session
+                        _ = appState.restoreSession()
+                    }
             } else if let journey = appState.selectedJourney {
                 TimelineCanvasView(
                     journeyTitle: journey.title,

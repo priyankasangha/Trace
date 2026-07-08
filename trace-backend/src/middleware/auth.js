@@ -1,4 +1,4 @@
-import appleSigninAuth from 'apple-signin-auth';
+import jwt from 'jsonwebtoken';
 import * as userService from '../services/userService.js';
 
 export async function protectWithApple(req, res, next) {
@@ -8,21 +8,19 @@ export async function protectWithApple(req, res, next) {
       return res.status(401).json({ error: 'Authorization token required' });
     }
 
-    const identityToken = authHeader.split(' ')[1];
+    const token = authHeader.split(' ')[1];
 
-    const appleUser = await appleSigninAuth.verifyIdToken(identityToken, {
-      audience: 'com.priyankasangha.Trace',
-    });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await userService.findOrCreateAppleUser({
-      email: appleUser.email,
-      name: appleUser.name
-    });
+    const user = await userService.findUserById(decoded.userId);
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
 
     req.user = user;
     next();
   } catch (error) {
-    console.error('Apple Auth Error:', error);
-    return res.status(401).json({ error: 'Invalid or expired identity token' });
+    console.error('Auth Error:', error);
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
 }

@@ -7,6 +7,8 @@ struct LoginView: View {
     
     @State private var isAnimated = false
     @State private var heartScale: CGFloat = 1.0
+    @State private var isAuthenticating = false
+    @State private var authError: String?
     
     var body: some View {
         ZStack {
@@ -63,7 +65,7 @@ struct LoginView: View {
                     .frame(maxWidth: 460)
                 }
                 
-                VStack {
+                VStack(spacing: 12) {
                     SignInWithAppleButton(.signIn, onRequest: { request in
                         request.requestedScopes = [.fullName, .email]
                     }, onCompletion: { result in
@@ -72,6 +74,18 @@ struct LoginView: View {
                     .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
                     .frame(width: AppTheme.authButtonWidth, height: AppTheme.authButtonHeight)
                     .opacity(isAnimated ? 1.0 : 0.0)
+                    .disabled(isAuthenticating)
+                    
+                    if isAuthenticating {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    }
+                    
+                    if let error = authError {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
                 }
                 .padding(.top, 54)
                 
@@ -114,12 +128,25 @@ struct LoginView: View {
             if let appleIDCredential = auth.credential as? ASAuthorizationAppleIDCredential,
                let identityToken = appleIDCredential.identityToken,
                let tokenString = String(data: identityToken, encoding: .utf8) {
-                // Store the Apple identity token — the backend middleware
-                // verifies it directly on each request
-                appState.authToken = tokenString
-                EventService.shared.authToken = tokenString
-                JourneyService.shared.authToken = tokenString
-                appState.isLoggedIn = true
+                isAuthenticating = true
+                authError = nil
+                
+                // Send Apple token to backend, get JWT back
+                Task {
+                    do {
+                        let response = try await AuthService.shared.authenticateWithApple(identityToken: tokenString)
+                        await MainActor.run {
+                            appState.configureAuth(token: response.token)
+                            isAuthenticating = false
+                        }
+                    } catch {
+                        await MainActor.run {
+                            authError = "Authentication failed. Is the server running?"
+                            isAuthenticating = false
+                            print("Auth error: \(error.localizedDescription)")
+                        }
+                    }
+                }
             }
             
         case .failure(let error):

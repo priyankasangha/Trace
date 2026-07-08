@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes.js';
 import journeyRoutes from './routes/journeyRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+
 
 dotenv.config();
 
@@ -17,6 +19,7 @@ app.get('/', (_req, res) => {
   res.send('Backend is running!');
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/journeys', journeyRoutes);
 app.use('/api/events', eventRoutes);
