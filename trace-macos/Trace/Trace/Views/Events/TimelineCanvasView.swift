@@ -202,9 +202,12 @@ struct TimelineCanvasView: View {
                         } else {
                             // Create new event
                             do {
+                                print("DEBUG: Creating event for journeyId=\(journeyId), title=\(payload.title)")
                                 let created = try await EventService.shared.createEvent(journeyId: journeyId, payload: payload)
+                                print("DEBUG: Event created successfully, id=\(created.id)")
                                 events.append(created)
                                 refreshStubs()
+                                print("DEBUG: Stubs refreshed, count=\(eventStubs.count)")
                             } catch {
                                 print("Create event failed: \(error.localizedDescription)")
                             }
@@ -239,8 +242,10 @@ struct TimelineCanvasView: View {
             FeedbackCornerSheet(onDismiss: { showFeedbackSheet = false })
         })
         .task {
+            print("DEBUG: Loading events for journeyId=\(journeyId)")
             do {
                 events = try await EventService.shared.fetchEvents(journeyId: journeyId)
+                print("DEBUG: Loaded \(events.count) events from API")
             } catch {
                 print("Failed to load events: \(error.localizedDescription)")
                 events = []

@@ -5,22 +5,7 @@ export const VIEW_MODES = {
   SELECT_EVENTS: 'SELECT_EVENTS',
 };
 
-async function ensureParticipant(userId, journeyId) {
-  const participant = await prisma.participant.findUnique({
-    where: {
-      userId_journeyId: {
-        userId: Number(userId),
-        journeyId: Number(journeyId),
-      },
-    },
-  });
-  if (!participant) throw new Error('You do not have permission to access this journey.');
-}
-
 export async function createEvent(data, user, journeyId) {
-  const userId = user.id;
-  await ensureParticipant(userId, journeyId);
-
   return await prisma.event.create({
     data: {
       title: data.title,
@@ -38,20 +23,11 @@ export async function createEvent(data, user, journeyId) {
       lastCelebratedYear: data.lastCelebratedYear ? Number(data.lastCelebratedYear) : null,
       isVisibleInHighlights: data.isVisibleInHighlights ?? true,
       journey: { connect: { id: Number(journeyId) } },
-      user: { connect: { id: Number(userId) } }
     },
-    include: {
-      user: {
-        select: { id: true, name: true, profilePic: true }
-      }
-    }
   });
 }
 
 export async function editEvent(data, user, journeyId, eventId) {
-  const userId = user.id;
-  await ensureParticipant(userId, journeyId);
-
   const updateData = {};
   
   if (data.title !== undefined) updateData.title = data.title;
@@ -76,18 +52,10 @@ export async function editEvent(data, user, journeyId, eventId) {
       journeyId: Number(journeyId) 
     },
     data: updateData,
-    include: {
-      user: {
-        select: { id: true, name: true, profilePic: true }
-      }
-    }
   });
 }
 
 export async function deleteEvent(user, journeyId, eventId) {
-  const userId = user.id;
-  await ensureParticipant(userId, journeyId);
-
   return await prisma.event.delete({
     where: { 
       id: Number(eventId),
@@ -97,8 +65,6 @@ export async function deleteEvent(user, journeyId, eventId) {
 }
 
 export async function getAllJourneyEvents(userId, journeyId, options = {}) {
-  await ensureParticipant(userId, journeyId);
-
   const queryConditions = { journeyId: Number(journeyId) };
   if (options.viewMode === VIEW_MODES.SELECT_EVENTS) {
     queryConditions.isVisibleInHighlights = true;
@@ -111,24 +77,12 @@ export async function getAllJourneyEvents(userId, journeyId, options = {}) {
       { month: 'asc' }, 
       { day: 'asc' }
     ],
-    include: {
-      user: {
-        select: { id: true, name: true, profilePic: true }
-      }
-    }
   });
 }
 
 export async function getEvent(userId, journeyId, eventId) {
-  await ensureParticipant(userId, journeyId);
-
   const event = await prisma.event.findUnique({
     where: { id: Number(eventId) },
-    include: {
-      user: {
-        select: { id: true, name: true, profilePic: true }
-      }
-    }
   });
 
   if (!event || event.journeyId !== Number(journeyId)) {
