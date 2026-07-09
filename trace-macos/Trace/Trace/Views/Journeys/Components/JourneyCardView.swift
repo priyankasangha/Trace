@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 // ==========================================
 // EDITORIAL JOURNEY DISPLAY CARD
@@ -22,8 +23,10 @@ struct JourneyCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .topTrailing) {
-                if let _ = journey.coverImageName {
-                    Color.gray
+                if let coverData = journey.coverImageName, let nsImage = NSImage.fromBase64(coverData) {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .scaledToFill()
                 } else {
                     LinearGradient(
                         colors: [AppTheme.roseGoldLight.opacity(0.6), AppTheme.roseGoldBase.opacity(0.3)],

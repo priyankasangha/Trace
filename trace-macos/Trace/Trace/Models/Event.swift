@@ -44,7 +44,8 @@ struct Event: Codable, Identifiable, Equatable {
             title: title,
             dateString: dateString,
             description: description ?? "",
-            imageName: "calendar.circle"
+            imageName: "calendar.circle",
+            coverImageData: coverImage
         )
     }
     

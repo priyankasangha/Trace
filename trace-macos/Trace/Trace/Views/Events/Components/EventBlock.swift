@@ -11,7 +11,7 @@ struct EventBlock: View {
     var body: some View {
         VStack(alignment: .center, spacing: 24) {
             // Extracted Graphic Asset Anchor
-            TimelineEventCircle(imageName: event.imageName)
+            TimelineEventCircle(imageName: event.imageName, coverImageData: event.coverImageData)
             
             // Extracted Core Data Panel
             TimelineEventCard(

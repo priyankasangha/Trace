@@ -44,6 +44,10 @@ struct CreateEventSheet: View {
     @State private var anniversaryEnabled: Bool
     @State private var isVisibleInHighlights: Bool
     
+    // Image cropper state
+    @State private var pendingCropImage: NSImage? = nil
+    @State private var showCropper: Bool = false
+    
     init(onDismiss: @escaping () -> Void, onSave: ((EventPayload) -> Void)? = nil, editingEvent: Event? = nil) {
         self.onDismiss = onDismiss
         self.onSave = onSave
@@ -63,6 +67,9 @@ struct CreateEventSheet: View {
             _longitudeString = State(initialValue: event.longitude.map { String($0) } ?? "")
             _anniversaryEnabled = State(initialValue: event.anniversaryEnabled)
             _isVisibleInHighlights = State(initialValue: event.isVisibleInHighlights)
+            if let base64 = event.coverImage {
+                _coverImage = State(initialValue: NSImage.fromBase64(base64))
+            }
         } else {
             _title = State(initialValue: "")
             _description = State(initialValue: "")
@@ -103,7 +110,10 @@ struct CreateEventSheet: View {
                 FormSectionHeader(text: "MEDIA ACCENTS")
                 
                 CustomFormRow(label: "Cover Image", labelWidth: formLabelWidth) {
-                    CoverImagePicker(selectedItem: $selectedCoverItem, coverImage: $coverImage)
+                    CoverImagePicker(selectedItem: $selectedCoverItem, coverImage: $coverImage, onImagePicked: { image in
+                        pendingCropImage = image
+                        showCropper = true
+                    })
                 }
             }
             
@@ -261,6 +271,32 @@ struct CreateEventSheet: View {
             .cornerRadius(8)
         }
         .frame(width: 480, height: 700)
+        .overlay {
+            if showCropper, let pending = pendingCropImage {
+                ZStack {
+                    Color.black.opacity(0.6)
+                    
+                    ImageCropperView(
+                        sourceImage: pending,
+                        aspectRatio: .circle,
+                        onCrop: { cropped in
+                            coverImage = cropped
+                            showCropper = false
+                            pendingCropImage = nil
+                        },
+                        onCancel: {
+                            showCropper = false
+                            pendingCropImage = nil
+                            selectedCoverItem = nil
+                        }
+                    )
+                    .frame(width: 440, height: 500)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: .black.opacity(0.3), radius: 20)
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: showCropper)
     }
     
     private func saveMilestone() {
@@ -273,7 +309,7 @@ struct CreateEventSheet: View {
             locationName: locationName.isEmpty ? nil : locationName,
             latitude: Double(latitudeString),
             longitude: Double(longitudeString),
-            coverImage: nil,
+            coverImage: coverImage?.toBase64(),
             journal: journal.isEmpty ? nil : journal,
             anniversaryEnabled: anniversaryEnabled,
             isVisibleInHighlights: isVisibleInHighlights

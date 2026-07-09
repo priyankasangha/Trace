@@ -26,6 +26,10 @@ struct CreateJourneySheet: View {
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var coverImage: NSImage? = nil
     
+    // Image cropper state
+    @State private var pendingCropImage: NSImage? = nil
+    @State private var showCropper: Bool = false
+    
     init(editingJourney: Journey? = nil, onDismiss: @escaping () -> Void, onSave: ((JourneyPayload) -> Void)? = nil) {
         self.editingJourney = editingJourney
         self.onDismiss = onDismiss
@@ -41,6 +45,9 @@ struct CreateJourneySheet: View {
             _endYear = State(initialValue: journey.endYear)
             _endMonth = State(initialValue: journey.endMonth)
             _endDay = State(initialValue: journey.endDay)
+            if let base64 = journey.coverPage {
+                _coverImage = State(initialValue: NSImage.fromBase64(base64))
+            }
         } else {
             _title = State(initialValue: "")
             _description = State(initialValue: "")
@@ -77,7 +84,10 @@ struct CreateJourneySheet: View {
                 FormSectionHeader(text: "VISUAL ACCENT")
                 
                 CustomFormRow(label: "Cover Photo") {
-                    CoverImagePicker(selectedItem: $selectedItem, coverImage: $coverImage)
+                    CoverImagePicker(selectedItem: $selectedItem, coverImage: $coverImage, onImagePicked: { image in
+                        pendingCropImage = image
+                        showCropper = true
+                    })
                 }
             }
             
@@ -179,13 +189,39 @@ struct CreateJourneySheet: View {
             }
         }
         .frame(width: 460, height: 560)
+        .overlay {
+            if showCropper, let pending = pendingCropImage {
+                ZStack {
+                    Color.black.opacity(0.6)
+                    
+                    ImageCropperView(
+                        sourceImage: pending,
+                        aspectRatio: .landscape,
+                        onCrop: { cropped in
+                            coverImage = cropped
+                            showCropper = false
+                            pendingCropImage = nil
+                        },
+                        onCancel: {
+                            showCropper = false
+                            pendingCropImage = nil
+                            selectedItem = nil
+                        }
+                    )
+                    .frame(width: 420, height: 480)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: .black.opacity(0.3), radius: 20)
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: showCropper)
     }
     
     private func saveJourney() {
         let payload = JourneyPayload(
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             description: description.isEmpty ? nil : description,
-            coverPage: nil,
+            coverPage: coverImage?.toBase64(),
             completed: !isOngoing,
             startYear: startYear,
             startMonth: startMonth,

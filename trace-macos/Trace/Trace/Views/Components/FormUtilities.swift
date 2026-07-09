@@ -231,12 +231,34 @@ struct SheetContainer<Content: View>: View {
 }
 
 // ==========================================
+// NSIMAGE ↔ BASE64 HELPERS
+// ==========================================
+
+extension NSImage {
+    /// Compress to JPEG and return a base64-encoded string.
+    func toBase64(compressionFactor: CGFloat = 0.7) -> String? {
+        guard let tiff = tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let jpeg = rep.representation(using: .jpeg, properties: [.compressionFactor: compressionFactor])
+        else { return nil }
+        return jpeg.base64EncodedString()
+    }
+    
+    /// Create an NSImage from a base64-encoded string.
+    static func fromBase64(_ string: String) -> NSImage? {
+        guard let data = Data(base64Encoded: string) else { return nil }
+        return NSImage(data: data)
+    }
+}
+
+// ==========================================
 // SHARED COVER IMAGE PICKER
 // ==========================================
 
 struct CoverImagePicker: View {
     @Binding var selectedItem: PhotosPickerItem?
     @Binding var coverImage: NSImage?
+    var onImagePicked: ((NSImage) -> Void)? = nil
     
     var body: some View {
         HStack(spacing: 12) {
@@ -257,7 +279,13 @@ struct CoverImagePicker: View {
                 Task {
                     if let data = try? await newItem?.loadTransferable(type: Data.self),
                        let nsImage = NSImage(data: data) {
-                        await MainActor.run { coverImage = nsImage }
+                        await MainActor.run {
+                            if let handler = onImagePicked {
+                                handler(nsImage)
+                            } else {
+                                coverImage = nsImage
+                            }
+                        }
                     }
                 }
             }
