@@ -105,7 +105,31 @@ struct JourneysViews: View {
                 .padding(.bottom, 24)
                 
                 ScrollView(.vertical, showsIndicators: true) {
-                    if filteredJourneys.isEmpty {
+                    if journeyItems.isEmpty {
+                        VStack(spacing: 16) {
+                            Image(systemName: "heart.fill")
+                                .font(.system(size: 48))
+                                .foregroundColor(AppTheme.roseGoldBase.opacity(0.5))
+                            
+                            Text("Start a Timeline Today")
+                                .font(.system(size: 20, weight: .semibold, design: .serif))
+                                .foregroundColor(AppTheme.primaryText.opacity(0.7))
+                            
+                            Text("Click anywhere to begin mapping moments that matter.")
+                                .font(AppTheme.body)
+                                .foregroundColor(AppTheme.primaryText.opacity(0.4))
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: 280)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(.top, 120)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            selectedJourney = nil
+                            editingJourney = nil
+                            showCreateSheet = true
+                        }
+                    } else if filteredJourneys.isEmpty {
                         VStack(spacing: 8) {
                             Image(systemName: "magnifyingglass")
                                 .font(.system(size: 22))
