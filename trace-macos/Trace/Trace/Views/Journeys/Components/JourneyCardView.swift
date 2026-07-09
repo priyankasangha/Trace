@@ -11,6 +11,7 @@ import SwiftUI
 // isHovered state this card already tracked for its scale/shadow effect.
 // ==========================================
 struct JourneyCardView: View {
+    var isInteractionDisabled: Bool = false
     let journey: JourneyItem
     var onOpen: () -> Void
     var onEdit: () -> Void
@@ -103,7 +104,11 @@ struct JourneyCardView: View {
         .contentShape(RoundedRectangle(cornerRadius: 12))
         .onTapGesture(perform: onOpen)
         .onHover { hovering in
-            isHovered = hovering
+            if !isInteractionDisabled {
+                isHovered = hovering
+            } else if isHovered {
+                isHovered = false
+            }
         }
     }
 }

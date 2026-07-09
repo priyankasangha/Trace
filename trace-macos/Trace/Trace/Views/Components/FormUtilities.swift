@@ -182,6 +182,8 @@ struct SheetContainer<Content: View>: View {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(AppTheme.roseGoldDark)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 

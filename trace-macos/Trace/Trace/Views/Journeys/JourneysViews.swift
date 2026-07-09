@@ -59,7 +59,8 @@ struct JourneysViews: View {
             AppSidebarView(
                 totalTimelinesCount: journeyItems.count,
                 recentActivities: recentActivities,
-                showFeedbackSheet: $showFeedbackSheet
+                showFeedbackSheet: $showFeedbackSheet,
+                isInteractionDisabled: showCreateSheet || showDeleteConfirmation || showFeedbackSheet
             )
             
             VStack(spacing: 0) {
@@ -119,6 +120,7 @@ struct JourneysViews: View {
                         LazyVGrid(columns: columns, spacing: 24) {
                             ForEach(filteredJourneys) { journey in
                                 JourneyCardView(
+                                    isInteractionDisabled: showCreateSheet || showDeleteConfirmation || showFeedbackSheet,
                                     journey: journey,
                                     onOpen: { onOpenJourney(journey) },
                                     onEdit: {
@@ -173,6 +175,12 @@ struct JourneysViews: View {
                 }
             }
         ))
+        .overlay {
+            if showCreateSheet || showDeleteConfirmation || showFeedbackSheet {
+                Color.black.opacity(0.001)
+                    .ignoresSafeArea()
+            }
+        }
         .overlay {
             if showCreateSheet {
                 ZStack {

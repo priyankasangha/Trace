@@ -54,7 +54,8 @@ struct TimelineCanvasView: View {
             AppSidebarView(
                 totalTimelinesCount: mockTotalTimelines,
                 recentActivities: mockActivities,
-                showFeedbackSheet: $showFeedbackSheet
+                showFeedbackSheet: $showFeedbackSheet,
+                isInteractionDisabled: showEventSheet || showDeleteConfirmation || showFeedbackSheet
             )
             
             // DYNAMIC TIMELINE WORKSPACE CANVAS
@@ -184,7 +185,12 @@ struct TimelineCanvasView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minWidth: 1150, minHeight: 700)
-        
+        .overlay {
+            if showEventSheet || showDeleteConfirmation || showFeedbackSheet {
+                Color.black.opacity(0.001)
+                    .ignoresSafeArea()
+            }
+        }
         .overlay {
             if showEventSheet {
                 ZStack {

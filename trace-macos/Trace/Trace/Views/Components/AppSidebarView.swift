@@ -4,6 +4,7 @@ struct AppSidebarView: View {
     let totalTimelinesCount: Int
     let recentActivities: [ActivityLogItem]
     @Binding var showFeedbackSheet: Bool
+    var isInteractionDisabled: Bool = false
     // Smooth layout interaction states
     @State private var footerHeartScale: CGFloat = 1.0
     @State private var feedbackCardHovered: Bool = false
@@ -15,7 +16,7 @@ struct AppSidebarView: View {
         VStack(spacing: 14) {
             
             // PROFILE IDENTITY CARD
-            FlippableCard(isFlipped: $profileFlipped) {
+            FlippableCard(isFlipped: $profileFlipped, isInteractionDisabled: isInteractionDisabled) {
                 VStack(spacing: 12) {
                     ZStack {
                         Circle()
@@ -47,7 +48,7 @@ struct AppSidebarView: View {
             }
             
             // METRICS / OVERVIEW MONITOR
-            FlippableCard(isFlipped: $overviewFlipped) {
+            FlippableCard(isFlipped: $overviewFlipped, isInteractionDisabled: isInteractionDisabled) {
                 VStack(alignment: .leading, spacing: 14) {
                     Text("OVERVIEW")
                         .font(.system(size: 9, weight: .bold))
@@ -81,7 +82,7 @@ struct AppSidebarView: View {
             }
             
             // LOG ENGINE PLACARD
-            FlippableCard(isFlipped: $activityFlipped) {
+            FlippableCard(isFlipped: $activityFlipped, isInteractionDisabled: isInteractionDisabled) {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("RECENT ACTIVITY")
                         .font(.system(size: 9, weight: .bold))
@@ -160,7 +161,11 @@ struct AppSidebarView: View {
             }
             .buttonStyle(.plain)
             .onHover { hovering in
-                feedbackCardHovered = hovering
+                if !isInteractionDisabled {
+                    feedbackCardHovered = hovering
+                } else if feedbackCardHovered {
+                    feedbackCardHovered = false
+                }
             }
             
             // SIGNATURE PLACARD FOOTER
@@ -192,6 +197,7 @@ struct AppSidebarView: View {
 // Flippable card — hover reveals a rose gold back with a heart
 private struct FlippableCard<Front: View>: View {
     @Binding var isFlipped: Bool
+    var isInteractionDisabled: Bool = false
     @ViewBuilder var front: () -> Front
     
     var body: some View {
@@ -227,7 +233,11 @@ private struct FlippableCard<Front: View>: View {
         )
         .animation(.spring(response: 0.55, dampingFraction: 0.75), value: isFlipped)
         .onHover { hovering in
-            isFlipped = hovering
+            if !isInteractionDisabled {
+                isFlipped = hovering
+            } else if isFlipped {
+                isFlipped = false
+            }
         }
     }
 }
