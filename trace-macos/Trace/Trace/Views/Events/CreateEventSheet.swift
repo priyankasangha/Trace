@@ -309,7 +309,7 @@ struct CreateEventSheet: View {
             locationName: locationName.isEmpty ? nil : locationName,
             latitude: Double(latitudeString),
             longitude: Double(longitudeString),
-            coverImage: coverImage?.toBase64(),
+            coverImage: isEditing ? (coverImage?.toBase64() ?? "") : coverImage?.toBase64(),
             journal: journal.isEmpty ? nil : journal,
             anniversaryEnabled: anniversaryEnabled,
             isVisibleInHighlights: isVisibleInHighlights

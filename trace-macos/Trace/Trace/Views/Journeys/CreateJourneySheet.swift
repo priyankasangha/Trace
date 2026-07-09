@@ -221,7 +221,7 @@ struct CreateJourneySheet: View {
         let payload = JourneyPayload(
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             description: description.isEmpty ? nil : description,
-            coverPage: coverImage?.toBase64(),
+            coverPage: isEditing ? (coverImage?.toBase64() ?? "") : coverImage?.toBase64(),
             completed: !isOngoing,
             startYear: startYear,
             startMonth: startMonth,
