@@ -27,6 +27,8 @@ struct JourneyCardView: View {
                     Image(nsImage: nsImage)
                         .resizable()
                         .scaledToFill()
+                        .frame(height: 115)
+                        .clipped()
                 } else {
                     LinearGradient(
                         colors: [AppTheme.roseGoldLight.opacity(0.6), AppTheme.roseGoldBase.opacity(0.3)],
@@ -58,6 +60,7 @@ struct JourneyCardView: View {
                     .animation(.easeOut(duration: 0.15), value: isHovered)
             }
             .frame(height: 115)
+            .clipped()
             
             VStack(alignment: .leading, spacing: 8) {
                 Text(journey.title)
