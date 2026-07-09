@@ -126,7 +126,9 @@ struct JourneysViews: View {
                                         if let apiId = itemToJourneyId[journey.id] {
                                             editingJourney = apiJourneys.first(where: { $0.id == apiId })
                                         }
-                                        showCreateSheet = true
+                                        DispatchQueue.main.async {
+                                            showCreateSheet = true
+                                        }
                                     },
                                     onDelete: {
                                         selectedJourney = journey
@@ -171,37 +173,49 @@ struct JourneysViews: View {
                 }
             }
         ))
-        .modifier(SheetOverlayModifier(isPresented: $showCreateSheet) {
-            CreateJourneySheet(
-                editingJourney: editingJourney,
-                onDismiss: { dismissCreateSheet() },
-                onSave: { payload in
-                    let existingJourney = editingJourney
-                    Task {
-                        if let existing = existingJourney {
-                            do {
-                                let updated = try await JourneyService.shared.updateJourney(journeyId: existing.id, payload: payload)
-                                if let idx = apiJourneys.firstIndex(where: { $0.id == existing.id }) {
-                                    apiJourneys[idx] = updated
+        .overlay {
+            if showCreateSheet {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                        .onTapGesture { dismissCreateSheet() }
+                    
+                    CreateJourneySheet(
+                        editingJourney: editingJourney,
+                        onDismiss: { dismissCreateSheet() },
+                        onSave: { payload in
+                            let existingJourney = editingJourney
+                            Task {
+                                if let existing = existingJourney {
+                                    do {
+                                        let updated = try await JourneyService.shared.updateJourney(journeyId: existing.id, payload: payload)
+                                        if let idx = apiJourneys.firstIndex(where: { $0.id == existing.id }) {
+                                            apiJourneys[idx] = updated
+                                        }
+                                        refreshItems()
+                                    } catch {
+                                        print("Update journey failed: \(error.localizedDescription)")
+                                    }
+                                } else {
+                                    do {
+                                        let created = try await JourneyService.shared.createJourney(payload: payload)
+                                        apiJourneys.append(created)
+                                        refreshItems()
+                                    } catch {
+                                        print("Create journey failed: \(error.localizedDescription)")
+                                    }
                                 }
-                                refreshItems()
-                            } catch {
-                                print("Update journey failed: \(error.localizedDescription)")
-                            }
-                        } else {
-                            do {
-                                let created = try await JourneyService.shared.createJourney(payload: payload)
-                                apiJourneys.append(created)
-                                refreshItems()
-                            } catch {
-                                print("Create journey failed: \(error.localizedDescription)")
                             }
                         }
-                    }
+                    )
+                    .id(editingJourney?.id)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: .black.opacity(0.25), radius: 20)
                 }
-            )
-            .id(editingJourney?.id)
-        })
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: showCreateSheet)
         .modifier(SheetOverlayModifier(isPresented: $showFeedbackSheet) {
             FeedbackCornerSheet(onDismiss: { showFeedbackSheet = false })
         })

@@ -159,7 +159,10 @@ struct TimelineCanvasView: View {
                                         if let apiId = stubToEventId[item.element.id] {
                                             editingEvent = events.first(where: { $0.id == apiId })
                                         }
-                                        showEventSheet = true
+                                        // Delay by one render cycle so editingEvent propagates before sheet appears
+                                        DispatchQueue.main.async {
+                                            showEventSheet = true
+                                        }
                                     },
                                     onDelete: {
                                         selectedEvent = item.element
@@ -182,42 +185,49 @@ struct TimelineCanvasView: View {
         }
         .frame(minWidth: 1150, minHeight: 700)
         
-        .modifier(SheetOverlayModifier(isPresented: $showEventSheet) {
-            CreateEventSheet(
-                onDismiss: { dismissEventSheet() },
-                onSave: { payload in
-                    let existingEvent = editingEvent
-                    Task {
-                        if let existing = existingEvent {
-                            // Update existing event
-                            do {
-                                let updated = try await EventService.shared.updateEvent(journeyId: journeyId, eventId: existing.id, payload: payload)
-                                if let idx = events.firstIndex(where: { $0.id == existing.id }) {
-                                    events[idx] = updated
+        .overlay {
+            if showEventSheet {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                        .onTapGesture { dismissEventSheet() }
+                    
+                    CreateEventSheet(
+                        onDismiss: { dismissEventSheet() },
+                        onSave: { payload in
+                            let existingEvent = editingEvent
+                            Task {
+                                if let existing = existingEvent {
+                                    do {
+                                        let updated = try await EventService.shared.updateEvent(journeyId: journeyId, eventId: existing.id, payload: payload)
+                                        if let idx = events.firstIndex(where: { $0.id == existing.id }) {
+                                            events[idx] = updated
+                                        }
+                                        refreshStubs()
+                                    } catch {
+                                        print("Update event failed: \(error.localizedDescription)")
+                                    }
+                                } else {
+                                    do {
+                                        let created = try await EventService.shared.createEvent(journeyId: journeyId, payload: payload)
+                                        events.append(created)
+                                        refreshStubs()
+                                    } catch {
+                                        print("Create event failed: \(error.localizedDescription)")
+                                    }
                                 }
-                                refreshStubs()
-                            } catch {
-                                print("Update event failed: \(error.localizedDescription)")
                             }
-                        } else {
-                            // Create new event
-                            do {
-                                print("DEBUG: Creating event for journeyId=\(journeyId), title=\(payload.title)")
-                                let created = try await EventService.shared.createEvent(journeyId: journeyId, payload: payload)
-                                print("DEBUG: Event created successfully, id=\(created.id)")
-                                events.append(created)
-                                refreshStubs()
-                                print("DEBUG: Stubs refreshed, count=\(eventStubs.count)")
-                            } catch {
-                                print("Create event failed: \(error.localizedDescription)")
-                            }
-                        }
-                    }
-                },
-                editingEvent: editingEvent
-            )
-            .id(editingEvent?.id)
-        })
+                        },
+                        editingEvent: editingEvent
+                    )
+                    .id(editingEvent?.id)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: .black.opacity(0.25), radius: 20)
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: showEventSheet)
         .modifier(DeleteConfirmationModifier(
             isPresented: $showDeleteConfirmation,
             selectedItem: $selectedEvent,
@@ -242,10 +252,8 @@ struct TimelineCanvasView: View {
             FeedbackCornerSheet(onDismiss: { showFeedbackSheet = false })
         })
         .task {
-            print("DEBUG: Loading events for journeyId=\(journeyId)")
             do {
                 events = try await EventService.shared.fetchEvents(journeyId: journeyId)
-                print("DEBUG: Loaded \(events.count) events from API")
             } catch {
                 print("Failed to load events: \(error.localizedDescription)")
                 events = []

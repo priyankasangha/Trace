@@ -8,24 +8,51 @@ struct CreateJourneySheet: View {
     var onSave: ((JourneyPayload) -> Void)? = nil
     
     // Form State
-    @State private var title: String = ""
-    @State private var description: String = ""
+    @State private var title: String
+    @State private var description: String
     @State private var participants: [String] = []
     @State private var searchText: String = ""
     
-    @State private var startDay: Int? = 1
-    @State private var startMonth: Int? = 1
-    @State private var startYear: Int? = 2026
+    @State private var startDay: Int?
+    @State private var startMonth: Int?
+    @State private var startYear: Int?
     
-    @State private var endDay: Int? = 1
-    @State private var endMonth: Int? = 1
-    @State private var endYear: Int? = 2026
+    @State private var endDay: Int?
+    @State private var endMonth: Int?
+    @State private var endYear: Int?
     
-    @State private var isOngoing: Bool = false
+    @State private var isOngoing: Bool
     
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var coverImage: NSImage? = nil
     
+    init(editingJourney: Journey? = nil, onDismiss: @escaping () -> Void, onSave: ((JourneyPayload) -> Void)? = nil) {
+        self.editingJourney = editingJourney
+        self.onDismiss = onDismiss
+        self.onSave = onSave
+        
+        if let journey = editingJourney {
+            _title = State(initialValue: journey.title)
+            _description = State(initialValue: journey.description ?? "")
+            _isOngoing = State(initialValue: !journey.completed)
+            _startYear = State(initialValue: journey.startYear)
+            _startMonth = State(initialValue: journey.startMonth)
+            _startDay = State(initialValue: journey.startDay)
+            _endYear = State(initialValue: journey.endYear)
+            _endMonth = State(initialValue: journey.endMonth)
+            _endDay = State(initialValue: journey.endDay)
+        } else {
+            _title = State(initialValue: "")
+            _description = State(initialValue: "")
+            _isOngoing = State(initialValue: false)
+            _startDay = State(initialValue: 1)
+            _startMonth = State(initialValue: 1)
+            _startYear = State(initialValue: 2026)
+            _endDay = State(initialValue: 1)
+            _endMonth = State(initialValue: 1)
+            _endYear = State(initialValue: 2026)
+        }
+    }
 
     
     private var isEditing: Bool { editingJourney != nil }
@@ -152,18 +179,6 @@ struct CreateJourneySheet: View {
             }
         }
         .frame(width: 460, height: 560)
-        .task(id: editingJourney?.id) {
-            guard let journey = editingJourney else { return }
-            title = journey.title
-            description = journey.description ?? ""
-            isOngoing = !journey.completed
-            startYear = journey.startYear
-            startMonth = journey.startMonth
-            startDay = journey.startDay
-            endYear = journey.endYear
-            endMonth = journey.endMonth
-            endDay = journey.endDay
-        }
     }
     
     private func saveJourney() {

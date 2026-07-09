@@ -14,16 +14,16 @@ struct CreateEventSheet: View {
     private let formLabelWidth: CGFloat = 110
     
     // Dynamic Header & Identity Bindings
-    @State private var title: String = ""
-    @State private var description: String = ""
-    @State private var journal: String = ""
+    @State private var title: String
+    @State private var description: String
+    @State private var journal: String
     
     // Modern Clean Chronology Bindings
-    @State private var year: Int = 2026
-    @State private var monthSelection: Int = 5
-    @State private var daySelection: Int = 31
-    @State private var includeMonth: Bool = true
-    @State private var includeDay: Bool = true
+    @State private var year: Int
+    @State private var monthSelection: Int
+    @State private var daySelection: Int
+    @State private var includeMonth: Bool
+    @State private var includeDay: Bool
     
     // Exact Timestamp States
     @State private var includeTime: Bool = false
@@ -32,17 +32,53 @@ struct CreateEventSheet: View {
     
     // Location
     @StateObject private var locationSearchService = LocationSearchService()
-    @State private var locationName: String = ""
-    @State private var latitudeString: String = ""
-    @State private var longitudeString: String = ""
+    @State private var locationName: String
+    @State private var latitudeString: String
+    @State private var longitudeString: String
     
     // Simplified PhotosPicker States — single cover image only
     @State private var selectedCoverItem: PhotosPickerItem? = nil
     @State private var coverImage: NSImage? = nil
     
     // Preferences & Flags
-    @State private var anniversaryEnabled: Bool = false
-    @State private var isVisibleInHighlights: Bool = true
+    @State private var anniversaryEnabled: Bool
+    @State private var isVisibleInHighlights: Bool
+    
+    init(onDismiss: @escaping () -> Void, onSave: ((EventPayload) -> Void)? = nil, editingEvent: Event? = nil) {
+        self.onDismiss = onDismiss
+        self.onSave = onSave
+        self.editingEvent = editingEvent
+        
+        if let event = editingEvent {
+            _title = State(initialValue: event.title)
+            _description = State(initialValue: event.description ?? "")
+            _journal = State(initialValue: event.journal ?? "")
+            _year = State(initialValue: event.year)
+            _monthSelection = State(initialValue: event.month ?? 5)
+            _daySelection = State(initialValue: event.day ?? 1)
+            _includeMonth = State(initialValue: event.month != nil)
+            _includeDay = State(initialValue: event.day != nil)
+            _locationName = State(initialValue: event.locationName ?? "")
+            _latitudeString = State(initialValue: event.latitude.map { String($0) } ?? "")
+            _longitudeString = State(initialValue: event.longitude.map { String($0) } ?? "")
+            _anniversaryEnabled = State(initialValue: event.anniversaryEnabled)
+            _isVisibleInHighlights = State(initialValue: event.isVisibleInHighlights)
+        } else {
+            _title = State(initialValue: "")
+            _description = State(initialValue: "")
+            _journal = State(initialValue: "")
+            _year = State(initialValue: 2026)
+            _monthSelection = State(initialValue: 5)
+            _daySelection = State(initialValue: 31)
+            _includeMonth = State(initialValue: true)
+            _includeDay = State(initialValue: true)
+            _locationName = State(initialValue: "")
+            _latitudeString = State(initialValue: "")
+            _longitudeString = State(initialValue: "")
+            _anniversaryEnabled = State(initialValue: false)
+            _isVisibleInHighlights = State(initialValue: true)
+        }
+    }
     
     private var isEditing: Bool { editingEvent != nil }
     
@@ -225,31 +261,6 @@ struct CreateEventSheet: View {
             .cornerRadius(8)
         }
         .frame(width: 480, height: 700)
-        .task(id: editingEvent?.id) {
-            guard let event = editingEvent else { return }
-            title = event.title
-            description = event.description ?? ""
-            year = event.year
-            if let m = event.month {
-                includeMonth = true
-                monthSelection = m
-                if let d = event.day {
-                    includeDay = true
-                    daySelection = d
-                } else {
-                    includeDay = false
-                }
-            } else {
-                includeMonth = false
-                includeDay = false
-            }
-            locationName = event.locationName ?? ""
-            if let lat = event.latitude { latitudeString = String(lat) }
-            if let lon = event.longitude { longitudeString = String(lon) }
-            journal = event.journal ?? ""
-            anniversaryEnabled = event.anniversaryEnabled
-            isVisibleInHighlights = event.isVisibleInHighlights
-        }
     }
     
     private func saveMilestone() {
