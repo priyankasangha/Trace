@@ -71,7 +71,7 @@ struct JourneysViews: View {
                             Text("Timelines")
                                 .font(.system(size: 38, weight: .bold, design: .serif))
                                 .foregroundColor(AppTheme.roseGoldDark)
-                            Text("Your collection of mapped timelines and interactive contexts.")
+                            Text("Your mapped moments")
                                 .font(.system(size: 13, weight: .medium, design: .serif))
                                 .italic()
                                 .foregroundColor(AppTheme.primaryText.opacity(0.55))
@@ -105,14 +105,7 @@ struct JourneysViews: View {
                         }
                     }
                     
-                    HStack {
-                        Text("TIMELINE COLLECTION")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundColor(AppTheme.primaryText.opacity(0.35))
-                            .tracking(1.5)
-                        Spacer()
-                    }
-                    .padding(.top, 4)
+
                 }
                 .padding(.horizontal, 40)
                 .padding(.vertical, 32)

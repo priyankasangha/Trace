@@ -67,24 +67,26 @@ struct TimelineCanvasView: View {
                         if let onBack {
                             Button(action: onBack) {
                                 Image(systemName: "chevron.left")
-                                    .font(.system(size: 16, weight: .medium))
+                                    .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(AppTheme.roseGoldDark)
+                                    .frame(width: 36, height: 36)
+                                    .background(AppTheme.roseGoldLight.opacity(0.12))
+                                    .clipShape(Circle())
+                                    .fineLineBorder(cornerRadius: 18)
                             }
                             .buttonStyle(.plain)
-                            .padding(.top, 10)
+                            .contentShape(Circle())
+                            .padding(.top, 6)
                         }
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text(journeyTitle)
                                 .font(.system(size: 38, weight: .bold, design: .serif))
                                 .foregroundColor(AppTheme.roseGoldDark)
-                            
-                            if !journeyDescription.isEmpty {
-                                Text(journeyDescription)
-                                    .font(.system(size: 13, weight: .medium, design: .serif))
-                                    .italic()
-                                    .foregroundColor(AppTheme.primaryText.opacity(0.55))
-                            }
+                            Text("Your milestones & memories")
+                                .font(.system(size: 13, weight: .medium, design: .serif))
+                                .italic()
+                                .foregroundColor(AppTheme.primaryText.opacity(0.55))
                         }
                         
                         Spacer()
@@ -112,14 +114,7 @@ struct TimelineCanvasView: View {
                         .buttonStyle(.plain)
                     }
                     
-                    HStack {
-                        Text("TIMELINE VIEW")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundColor(AppTheme.primaryText.opacity(0.35))
-                            .tracking(1.5)
-                        Spacer()
-                    }
-                    .padding(.top, 4)
+
                 }
                 .padding(.horizontal, 40)
                 .padding(.vertical, 32)
