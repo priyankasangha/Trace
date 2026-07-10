@@ -39,3 +39,38 @@ extension View {
         self.modifier(FineLineBorder(color: color, cornerRadius: cornerRadius))
     }
 }
+// ==========================================
+// EMPTY STATE PLACEHOLDER
+// ==========================================
+
+struct EmptyStatePlaceholder: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    var onTap: (() -> Void)? = nil
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: icon)
+                .font(.system(size: 28, weight: .thin))
+                .foregroundColor(AppTheme.roseGoldDark.opacity(0.45))
+            
+            Text(title)
+                .font(.system(size: 20, weight: .semibold, design: .serif))
+                .foregroundColor(AppTheme.primaryText.opacity(0.7))
+            
+            Text(subtitle)
+                .font(AppTheme.body)
+                .foregroundColor(AppTheme.primaryText.opacity(0.4))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 280)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.top, 60)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap?()
+        }
+    }
+}
+

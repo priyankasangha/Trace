@@ -58,79 +58,86 @@ struct JourneysViews: View {
         HSplitView {
             AppSidebarView(
                 totalTimelinesCount: journeyItems.count,
+                activeTimelinesCount: journeyItems.filter(\.isOngoing).count,
                 recentActivities: recentActivities,
                 showFeedbackSheet: $showFeedbackSheet,
                 isInteractionDisabled: showCreateSheet || showDeleteConfirmation || showFeedbackSheet
             )
             
             VStack(spacing: 0) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Timelines")
-                            .font(AppTheme.largeTitle)
-                            .foregroundColor(AppTheme.roseGoldDark)
-                        Text("Your collection of mapped timelines and interactive contexts.")
-                            .font(AppTheme.body)
-                            .foregroundColor(AppTheme.primaryText.opacity(AppTheme.mutedTextOpacity))
-                    }
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 12) {
-                        JourneySearchCapsule(searchText: $searchText, isActive: $isSearchActive)
-                        
-                        // FIXED: Clears selection explicitly so the sheet re-evaluates as a fresh creation modal
-                        Button(action: {
-                            selectedJourney = nil
-                            editingJourney = nil
-                            showCreateSheet = true
-                        }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 11, weight: .bold))
-                                Text("NEW TIMELINE")
-                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                    .tracking(0.5)
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(AppTheme.roseGoldDark)
-                            .cornerRadius(20)
-                            .shadow(color: AppTheme.roseGoldDark.opacity(0.15), radius: 6, x: 0, y: 3)
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Timelines")
+                                .font(.system(size: 38, weight: .bold, design: .serif))
+                                .foregroundColor(AppTheme.roseGoldDark)
+                            Text("Your collection of mapped timelines and interactive contexts.")
+                                .font(.system(size: 13, weight: .medium, design: .serif))
+                                .italic()
+                                .foregroundColor(AppTheme.primaryText.opacity(0.55))
                         }
-                        .buttonStyle(.plain)
+                        
+                        Spacer()
+                        
+                        HStack(spacing: 12) {
+                            JourneySearchCapsule(searchText: $searchText, isActive: $isSearchActive)
+                            
+                            Button(action: {
+                                selectedJourney = nil
+                                editingJourney = nil
+                                showCreateSheet = true
+                            }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "plus")
+                                        .font(.system(size: 11, weight: .bold))
+                                    Text("NEW TIMELINE")
+                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                        .tracking(0.5)
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(AppTheme.roseGoldDark)
+                                .cornerRadius(20)
+                                .shadow(color: AppTheme.roseGoldDark.opacity(0.15), radius: 6, x: 0, y: 3)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
+                    
+                    HStack {
+                        Text("TIMELINE COLLECTION")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(AppTheme.primaryText.opacity(0.35))
+                            .tracking(1.5)
+                        Spacer()
+                    }
+                    .padding(.top, 4)
                 }
-                .padding(.horizontal, 32)
-                .padding(.top, AppTheme.windowTopSafetyPadding + 12)
-                .padding(.bottom, 24)
+                .padding(.horizontal, 40)
+                .padding(.vertical, 32)
+                .background(AppTheme.cardBackground.ignoresSafeArea())
+                .overlay(
+                    VStack {
+                        Spacer()
+                        Rectangle()
+                            .fill(AppTheme.roseGoldLight.opacity(0.2))
+                            .frame(height: 1)
+                    }
+                )
                 
                 ScrollView(.vertical, showsIndicators: true) {
                     if journeyItems.isEmpty {
-                        VStack(spacing: 16) {
-                            Image(systemName: "heart.fill")
-                                .font(.system(size: 48))
-                                .foregroundColor(AppTheme.roseGoldBase.opacity(0.5))
-                            
-                            Text("Start a Timeline Today")
-                                .font(.system(size: 20, weight: .semibold, design: .serif))
-                                .foregroundColor(AppTheme.primaryText.opacity(0.7))
-                            
-                            Text("Click anywhere to begin mapping moments that matter.")
-                                .font(AppTheme.body)
-                                .foregroundColor(AppTheme.primaryText.opacity(0.4))
-                                .multilineTextAlignment(.center)
-                                .frame(maxWidth: 280)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .padding(.top, 120)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            selectedJourney = nil
-                            editingJourney = nil
-                            showCreateSheet = true
-                        }
+                        EmptyStatePlaceholder(
+                            icon: "heart.fill",
+                            title: "Start a Timeline Today",
+                            subtitle: "Click anywhere to begin mapping moments that matter.",
+                            onTap: {
+                                selectedJourney = nil
+                                editingJourney = nil
+                                showCreateSheet = true
+                            }
+                        )
                     } else if filteredJourneys.isEmpty {
                         VStack(spacing: 8) {
                             Image(systemName: "magnifyingglass")
@@ -166,6 +173,7 @@ struct JourneysViews: View {
                             }
                         }
                         .padding(.horizontal, 32)
+                        .padding(.top, 24)
                         .padding(.bottom, 32)
                     }
                 }

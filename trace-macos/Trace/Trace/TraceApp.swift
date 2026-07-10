@@ -17,6 +17,7 @@ struct TraceApp: App {
         ActivityLogItem(message: "Shared 'Summer in Europe' context", timestamp: "2 hours ago")
     ]
     
+    
     var body: some Scene {
         WindowGroup {
             if !appState.isLoggedIn {

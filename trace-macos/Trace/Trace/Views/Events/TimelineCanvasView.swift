@@ -53,6 +53,7 @@ struct TimelineCanvasView: View {
             // UNIFIED BRANDING SIDEBAR PLATFORM
             AppSidebarView(
                 totalTimelinesCount: mockTotalTimelines,
+                activeTimelinesCount: 1,
                 recentActivities: mockActivities,
                 showFeedbackSheet: $showFeedbackSheet,
                 isInteractionDisabled: showEventSheet || showDeleteConfirmation || showFeedbackSheet
@@ -112,7 +113,7 @@ struct TimelineCanvasView: View {
                     }
                     
                     HStack {
-                        Text("ENGINEERING CANVAS METADATA PLATFORM")
+                        Text("TIMELINE VIEW")
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .foregroundColor(AppTheme.primaryText.opacity(0.35))
                             .tracking(1.5)
@@ -133,54 +134,68 @@ struct TimelineCanvasView: View {
                 )
                 
                 // TIMELINE CANVAS STREAM
-                ScrollView(.vertical, showsIndicators: true) {
-                    ZStack(alignment: .top) {
-                        Rectangle()
-                            .fill(AppTheme.roseGoldLight.opacity(0.3))
-                            .frame(width: 1.5)
-                            .padding(.vertical, 40)
-                        
-                        VStack(spacing: 60) {
-                            ForEach(Array(eventStubs.enumerated()), id: \.element.id) { item in
-                                EventRowContainer(
-                                    event: item.element,
-                                    isLeftAligned: item.offset % 2 == 0,
-                                    isFocused: focusedEventId == item.element.id,
-                                    onDoubleTap: {
-                                        withAnimation {
-                                            if focusedEventId == item.element.id {
-                                                focusedEventId = nil
-                                            } else {
-                                                focusedEventId = item.element.id
-                                            }
-                                        }
-                                    },
-                                    onEdit: {
-                                        selectedEvent = item.element
-                                        if let apiId = stubToEventId[item.element.id] {
-                                            editingEvent = events.first(where: { $0.id == apiId })
-                                        }
-                                        // Delay by one render cycle so editingEvent propagates before sheet appears
-                                        DispatchQueue.main.async {
-                                            showEventSheet = true
-                                        }
-                                    },
-                                    onDelete: {
-                                        selectedEvent = item.element
-                                        showDeleteConfirmation = true
-                                    }
-                                )
-                            }
+                if eventStubs.isEmpty {
+                    EmptyStatePlaceholder(
+                        icon: "plus.circle",
+                        title: "Add Your First Event",
+                        subtitle: "Click anywhere to start building this timeline.",
+                        onTap: {
+                            selectedEvent = nil
+                            editingEvent = nil
+                            showEventSheet = true
                         }
-                        .padding(.vertical, 40)
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(AppTheme.primaryBackground.opacity(0.98))
+                } else {
+                    ScrollView(.vertical, showsIndicators: true) {
+                        ZStack(alignment: .top) {
+                            Rectangle()
+                                .fill(AppTheme.roseGoldLight.opacity(0.3))
+                                .frame(width: 1.5)
+                                .padding(.vertical, 40)
+                            
+                            VStack(spacing: 60) {
+                                ForEach(Array(eventStubs.enumerated()), id: \.element.id) { item in
+                                    EventRowContainer(
+                                        event: item.element,
+                                        isLeftAligned: item.offset % 2 == 0,
+                                        isFocused: focusedEventId == item.element.id,
+                                        onDoubleTap: {
+                                            withAnimation {
+                                                if focusedEventId == item.element.id {
+                                                    focusedEventId = nil
+                                                } else {
+                                                    focusedEventId = item.element.id
+                                                }
+                                            }
+                                        },
+                                        onEdit: {
+                                            selectedEvent = item.element
+                                            if let apiId = stubToEventId[item.element.id] {
+                                                editingEvent = events.first(where: { $0.id == apiId })
+                                            }
+                                            DispatchQueue.main.async {
+                                                showEventSheet = true
+                                            }
+                                        },
+                                        onDelete: {
+                                            selectedEvent = item.element
+                                            showDeleteConfirmation = true
+                                        }
+                                    )
+                                }
+                            }
+                            .padding(.vertical, 40)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation { focusedEventId = nil }
+                        }
                     }
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        withAnimation { focusedEventId = nil }
-                    }
+                    .background(AppTheme.primaryBackground.opacity(0.98))
                 }
-                .background(AppTheme.primaryBackground.opacity(0.98))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }

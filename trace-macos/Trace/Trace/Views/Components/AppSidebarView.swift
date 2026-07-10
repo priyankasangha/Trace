@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AppSidebarView: View {
     let totalTimelinesCount: Int
+    let activeTimelinesCount: Int
     let recentActivities: [ActivityLogItem]
     @Binding var showFeedbackSheet: Bool
     var isInteractionDisabled: Bool = false
@@ -29,16 +30,9 @@ struct AppSidebarView: View {
                     }
                     .overlay(Circle().stroke(AppTheme.roseGoldBase.opacity(0.5), lineWidth: AppTheme.thinLineWidth))
                     
-                    VStack(spacing: 3) {
-                        Text("Priyanka Sangha")
-                            .font(AppTheme.title)
-                            .foregroundColor(AppTheme.primaryText)
-                        
-                        Text("Architect & Creator")
-                            .font(AppTheme.appTagline)
-                            .tracking(AppTheme.placardTracking)
-                            .foregroundColor(AppTheme.roseGoldDark)
-                    }
+                    Text("Priyanka Sangha")
+                        .font(AppTheme.title)
+                        .foregroundColor(AppTheme.primaryText)
                 }
                 .padding(.vertical, 24)
                 .frame(maxWidth: .infinity)
@@ -70,7 +64,7 @@ struct AppSidebarView: View {
                     
                     Group {
                         MetricRow(label: "Total Timelines", value: "\(totalTimelinesCount)")
-                        MetricRow(label: "Active Contexts", value: "1")
+                        MetricRow(label: "Active Timelines", value: "\(activeTimelinesCount)")
                         MetricRow(label: "Shared Spaces", value: "2")
                         MetricRow(label: "Pinned Milestones", value: "8")
                         MetricRow(label: "Total Contributors", value: "5")
@@ -81,7 +75,7 @@ struct AppSidebarView: View {
                 .cornerRadius(12)
             }
             
-            // LOG ENGINE PLACARD
+            // RECENT ACTIVITY
             FlippableCard(isFlipped: $activityFlipped, isInteractionDisabled: isInteractionDisabled) {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("RECENT ACTIVITY")
