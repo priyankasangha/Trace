@@ -6,7 +6,6 @@ struct LoginView: View {
     @Environment(AppState.self) private var appState
     
     @State private var isAnimated = false
-    @State private var heartScale: CGFloat = 1.0
     @State private var isAuthenticating = false
     @State private var authError: String?
     
@@ -37,29 +36,17 @@ struct LoginView: View {
                         .offset(y: isAnimated ? 0 : 4)
                     
                     HStack(spacing: 0) {
-                        Circle()
-                            .fill(AppTheme.roseGoldDark.opacity(AppTheme.accentOpacity))
-                            .frame(width: 6, height: 6)
-                        
                         Rectangle()
                             .fill(AppTheme.roseGoldLight.opacity(AppTheme.accentOpacity))
                             .frame(height: AppTheme.regularLineWidth)
                             .frame(maxWidth: isAnimated ? 180 : 0)
                         
-                        Image(systemName: "heart.fill")
-                            .font(.system(size: 12))
-                            .foregroundStyle(AppTheme.roseGoldDark)
-                            .padding(.horizontal, isAnimated ? 18 : 0)
-                            .scaleEffect(isAnimated ? heartScale : 0.0)
+                        FineDotAccent()
                         
                         Rectangle()
                             .fill(AppTheme.roseGoldLight.opacity(AppTheme.accentOpacity))
                             .frame(height: AppTheme.regularLineWidth)
                             .frame(maxWidth: isAnimated ? 180 : 0)
-                        
-                        Circle()
-                            .fill(AppTheme.roseGoldDark.opacity(AppTheme.accentOpacity))
-                            .frame(width: 6, height: 6)
                     }
                     .padding(.top, 12)
                     .frame(maxWidth: 460)
@@ -84,7 +71,7 @@ struct LoginView: View {
                     if let error = authError {
                         Text(error)
                             .font(.caption)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(AppTheme.destructive)
                     }
                 }
                 .padding(.top, 54)
@@ -107,17 +94,6 @@ struct LoginView: View {
         .onAppear {
             withAnimation(.spring(response: 0.9, dampingFraction: 0.8)) {
                 isAnimated = true
-            }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                withAnimation(.interpolatingSpring(stiffness: 100, damping: 10)) {
-                    heartScale = 1.25
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                    withAnimation(.spring()) {
-                        heartScale = 1.0
-                    }
-                }
             }
         }
     }

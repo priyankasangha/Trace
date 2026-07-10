@@ -6,6 +6,8 @@ struct TimelineEventCard: View {
     let dateString: String
     let description: String
     
+    @State private var isHovered = false
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -44,7 +46,15 @@ struct TimelineEventCard: View {
             RoundedRectangle(cornerRadius: 16)
                 .stroke(AppTheme.roseGoldLight.opacity(0.25), lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.02), radius: 8, x: 0, y: 4)
+        .shadow(
+            color: Color.black.opacity(isHovered ? AppTheme.cardShadowOpacityHovered : AppTheme.cardShadowOpacityResting),
+            radius: AppTheme.cardShadowRadius,
+            x: 0,
+            y: AppTheme.cardShadowY
+        )
+        .scaleEffect(isHovered ? 1.01 : 1.0)
+        .animation(.easeOut(duration: 0.2), value: isHovered)
+        .onHover { isHovered = $0 }
         .frame(width: 280)
     }
 }

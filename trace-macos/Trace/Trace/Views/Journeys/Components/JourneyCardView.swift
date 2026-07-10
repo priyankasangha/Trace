@@ -105,7 +105,12 @@ struct JourneyCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .fineLineBorder()
         .scaleEffect(isHovered ? 1.015 : 1.0)
-        .shadow(color: Color.black.opacity(isHovered ? 0.04 : 0.0), radius: 8, x: 0, y: 4)
+        .shadow(
+            color: Color.black.opacity(isHovered ? AppTheme.cardShadowOpacityHovered : AppTheme.cardShadowOpacityResting),
+            radius: AppTheme.cardShadowRadius,
+            x: 0,
+            y: AppTheme.cardShadowY
+        )
         .animation(.easeOut(duration: 0.2), value: isHovered)
         .contentShape(RoundedRectangle(cornerRadius: 12))
         .onTapGesture(perform: onOpen)

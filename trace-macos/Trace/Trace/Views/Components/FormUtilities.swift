@@ -10,11 +10,16 @@ struct FormSectionHeader: View {
     let text: String
     
     var body: some View {
-        Text(text)
-            .font(.system(size: 10, weight: .bold))
-            .tracking(1.2)
-            .foregroundColor(AppTheme.roseGoldDark)
-            .padding(.top, 4)
+        VStack(alignment: .leading, spacing: 6) {
+            Text(text.localizedCapitalized)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(AppTheme.roseGoldDark)
+                .padding(.top, 4)
+            
+            Rectangle()
+                .fill(AppTheme.roseGoldBase.opacity(0.4))
+                .frame(width: 24, height: 1.5)
+        }
     }
 }
 
@@ -71,8 +76,8 @@ extension View {
             .textFieldStyle(.plain)
             .font(AppTheme.body)
             .foregroundColor(AppTheme.primaryText)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
             .background(Color(nsColor: .controlBackgroundColor))
             .clipShape(RoundedRectangle(cornerRadius: 6))
             .overlay(
@@ -294,10 +299,10 @@ struct CoverImagePicker: View {
                 Image(nsImage: img)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 50, height: 32)
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .frame(width: 80, height: 52)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 4)
+                        RoundedRectangle(cornerRadius: 6)
                             .stroke(AppTheme.primaryText.opacity(0.08), lineWidth: AppTheme.thinLineWidth)
                     )
                 

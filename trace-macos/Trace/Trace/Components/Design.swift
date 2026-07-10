@@ -23,18 +23,19 @@ struct FineDotAccent: View {
 
 struct FineLineBorder: ViewModifier {
     var color: Color = AppTheme.roseGoldLight.opacity(0.5)
+    var cornerRadius: CGFloat = 12
     
     func body(content: Content) -> some View {
         content
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: cornerRadius)
                     .stroke(color, lineWidth: AppTheme.thinLineWidth)
             )
     }
 }
 
 extension View {
-    func fineLineBorder(color: Color = AppTheme.roseGoldLight.opacity(0.5)) -> some View {
-        self.modifier(FineLineBorder(color: color))
+    func fineLineBorder(color: Color = AppTheme.roseGoldLight.opacity(0.5), cornerRadius: CGFloat = 12) -> some View {
+        self.modifier(FineLineBorder(color: color, cornerRadius: cornerRadius))
     }
 }

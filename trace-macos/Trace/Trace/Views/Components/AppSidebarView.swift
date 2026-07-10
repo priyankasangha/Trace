@@ -52,7 +52,7 @@ struct AppSidebarView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     Text("OVERVIEW")
                         .font(.system(size: 9, weight: .bold))
-                        .tracking(AppTheme.titleTracking)
+                        .tracking(3.0)
                         .foregroundColor(AppTheme.roseGoldDark)
                     
                     HStack(spacing: 4) {
@@ -77,7 +77,7 @@ struct AppSidebarView: View {
                     }
                 }
                 .padding(16)
-                .background(AppTheme.roseGoldLight.opacity(0.08))
+                .background(AppTheme.roseGoldLight.opacity(0.14))
                 .cornerRadius(12)
             }
             
@@ -86,19 +86,19 @@ struct AppSidebarView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("RECENT ACTIVITY")
                         .font(.system(size: 9, weight: .bold))
-                        .tracking(AppTheme.titleTracking)
+                        .tracking(3.0)
                         .foregroundColor(AppTheme.roseGoldDark)
                     
                     VStack(alignment: .leading, spacing: 10) {
                         ForEach(recentActivities) { log in
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(log.message)
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 12))
                                     .foregroundColor(AppTheme.primaryText.opacity(0.85))
                                     .lineLimit(1)
                                 
                                 Text(log.timestamp)
-                                    .font(.system(size: 9, weight: .medium))
+                                    .font(.system(size: 10, weight: .medium))
                                     .foregroundColor(AppTheme.roseGoldDark.opacity(0.7))
                             }
                             

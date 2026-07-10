@@ -34,7 +34,7 @@ struct BoundedVerticalEventRow: View {
             Circle()
                 .fill(AppTheme.roseGoldBase)
                 .frame(width: 8, height: 8)
-                .background(Circle().stroke(AppTheme.roseGoldLight.opacity(0.5), lineWidth: 4))
+                .overlay(Circle().stroke(AppTheme.roseGoldLight.opacity(0.4), lineWidth: 2))
                 .frame(width: 2)
             
             // COLUMN 3: RIGHT WING AREA

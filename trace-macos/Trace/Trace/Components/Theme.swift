@@ -35,6 +35,12 @@ struct AppTheme {
     static let roseGoldMedium = Color(hex: "#E0A996")
     static let roseGoldDark   = Color(hex: "#C68B75")
     
+    // Themed destructive / error color (warm red that harmonizes with rose gold)
+    static let destructive = Color.dynamic(
+        light: Color(hex: "#C2564D"),
+        dark: Color(hex: "#E07A72")
+    )
+    
     // ------------------------------------------
     // B. LAYOUT & GEOMETRY CONSTANTS
     // ------------------------------------------
@@ -71,6 +77,14 @@ struct AppTheme {
     // ------------------------------------------
     static let accentOpacity: Double = 0.6
     static let mutedTextOpacity: Double = 0.8
+    
+    // ------------------------------------------
+    // F. SHADOW TOKENS
+    // ------------------------------------------
+    static let cardShadowOpacityResting: Double = 0.06
+    static let cardShadowOpacityHovered: Double = 0.10
+    static let cardShadowRadius: CGFloat = 10
+    static let cardShadowY: CGFloat = 5
 }
 
 // ==========================================
