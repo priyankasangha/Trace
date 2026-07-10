@@ -67,7 +67,7 @@ struct CreateJourneySheet: View {
     private var displayTitle: String {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
-            return isEditing ? "Edit Journey" : "New Timeline"
+            return isEditing ? "Edit Timeline" : "New Timeline"
         }
         return trimmed
     }

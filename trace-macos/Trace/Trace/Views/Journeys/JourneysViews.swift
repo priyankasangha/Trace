@@ -66,7 +66,7 @@ struct JourneysViews: View {
             VStack(spacing: 0) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Journeys")
+                        Text("Timelines")
                             .font(AppTheme.largeTitle)
                             .foregroundColor(AppTheme.roseGoldDark)
                         Text("Your collection of mapped timelines and interactive contexts.")
@@ -88,7 +88,7 @@ struct JourneysViews: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "plus")
                                     .font(.system(size: 11, weight: .bold))
-                                Text("New Journey")
+                                Text("New Timeline")
                                     .font(AppTheme.subtitle)
                             }
                             .foregroundColor(.white)
@@ -134,7 +134,7 @@ struct JourneysViews: View {
                             Image(systemName: "magnifyingglass")
                                 .font(.system(size: 22))
                                 .foregroundColor(AppTheme.primaryText.opacity(0.25))
-                            Text("No journeys match \"\(searchText)\"")
+                            Text("No timelines match \"\(searchText)\"")
                                 .font(AppTheme.body)
                                 .foregroundColor(AppTheme.primaryText.opacity(0.5))
                         }
@@ -183,7 +183,7 @@ struct JourneysViews: View {
         .modifier(DeleteConfirmationModifier(
             isPresented: $showDeleteConfirmation,
             selectedItem: $selectedJourney,
-            itemLabel: "Journey",
+            itemLabel: "Timeline",
             displayName: { $0.title },
             onDelete: { journey in
                 if let apiId = itemToJourneyId[journey.id] {
@@ -280,7 +280,7 @@ private struct JourneySearchCapsule: View {
             if isActive {
                 NativeSearchField(
                     text: $searchText,
-                    placeholder: "Search journeys...",
+                    placeholder: "Search timelines...",
                     chrome: .plain,
                     autoFocus: true,
                     onCommit: {},
@@ -314,7 +314,7 @@ private struct JourneySearchCapsule: View {
                 }
             }
         }
-        .help("Search Journeys")
+        .help("Search Timelines")
     }
     
     private func collapse() {
