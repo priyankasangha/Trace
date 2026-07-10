@@ -24,10 +24,12 @@ struct JourneyCardView: View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .topTrailing) {
                 if let coverData = journey.coverImageName, let nsImage = NSImage.fromBase64(coverData) {
-                    Image(nsImage: nsImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(height: 115)
+                    Color.clear
+                        .overlay(
+                            Image(nsImage: nsImage)
+                                .resizable()
+                                .scaledToFill()
+                        )
                         .clipped()
                 } else {
                     LinearGradient(

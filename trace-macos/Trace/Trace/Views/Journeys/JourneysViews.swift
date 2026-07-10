@@ -88,14 +88,16 @@ struct JourneysViews: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "plus")
                                     .font(.system(size: 11, weight: .bold))
-                                Text("New Timeline")
-                                    .font(AppTheme.subtitle)
+                                Text("NEW TIMELINE")
+                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    .tracking(0.5)
                             }
                             .foregroundColor(.white)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 7)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
                             .background(AppTheme.roseGoldDark)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .cornerRadius(20)
+                            .shadow(color: AppTheme.roseGoldDark.opacity(0.15), radius: 6, x: 0, y: 3)
                         }
                         .buttonStyle(.plain)
                     }
@@ -169,6 +171,7 @@ struct JourneysViews: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
             .background(AppTheme.primaryBackground)
             .contentShape(Rectangle())
             .onTapGesture {
