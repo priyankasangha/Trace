@@ -8,7 +8,7 @@
 A MacOS timeline app that allows users to keep track of ongoing events, such as projects or goals. Users can add events, store media, and reflect on their progress overtime.
 
 <p align="center">
-  <img src="media/main.gif" width=80% height=80%/>
+  <img src="media/main.gif" width=50% height=50%/>
 </p>
 
 ## Features
