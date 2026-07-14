@@ -1,14 +1,28 @@
-**✨Invisible String** <br>
-_A personal timeline app that allows users to keep track of ongoing events, such as projects or goals. Users can add events, store media, and reflect on their progress overtime._
+<div align="center">
+  <h1>
+    <img src="media/Trace_logo_light_rounded.png" alt="Logo" height="20px">
+    Trace
+  </h1>
+</div>
 
-💡Example Use Cases:
+A MacOS timeline app that allows users to keep track of ongoing events, such as projects or goals. Users can add events, store media, and reflect on their progress overtime.
 
-- Track milestones in a startup journey
-- Create a timeline for a relationship
-- Document personal growth or recovery
+<p align="center">
+  <img src="media/main.gif" width=80% height=80%/>
+</p>
 
-🚀 Features:
+## Features
 
-- Add and edit timeline entries with text and media
-- Automatically sorts events by date
-- Custom tags or categories (award, graduation, date)
+<details><summary> Creating a Timeline </summary>
+<div style="display:inline-block; margin-right:10px; margin-left:10px; margin-top:10px;">
+    <img src="media/new_timeline.gif" width=100% height=100%>
+</div>
+</details>
+
+<details><summary> Add an Event </summary>
+
+</details>
+
+<details><summary> Feedback Corner </summary>
+
+</details>

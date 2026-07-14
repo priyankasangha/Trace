@@ -24,3 +24,14 @@ struct EventBlock: View {
         .frame(width: 280)
     }
 }
+#Preview {
+    EventBlock(event: TimelineEventStub(
+        category: "Milestone",
+        title: "First Commit",
+        dateString: "Jan 15, 2026",
+        description: "The very first commit that started it all.",
+        imageName: "star.fill"
+    ))
+    .padding(40)
+}
+

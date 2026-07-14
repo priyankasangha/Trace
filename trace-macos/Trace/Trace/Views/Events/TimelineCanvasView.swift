@@ -150,7 +150,7 @@ struct TimelineCanvasView: View {
                                 .frame(width: 1.5)
                                 .padding(.vertical, 40)
                             
-                            VStack(spacing: 60) {
+                            VStack(spacing: -10) {
                                 ForEach(Array(eventStubs.enumerated()), id: \.element.id) { item in
                                     EventRowContainer(
                                         event: item.element,

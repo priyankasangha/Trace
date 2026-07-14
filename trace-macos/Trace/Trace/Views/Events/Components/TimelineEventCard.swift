@@ -23,7 +23,7 @@ struct TimelineEventCard: View {
                     .foregroundColor(AppTheme.primaryText.opacity(0.4))
             }
             
-            Divider().opacity(0.1)
+      //      Divider().opacity(0.5)
             
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
@@ -60,5 +60,5 @@ struct TimelineEventCard: View {
 }
 
 #Preview {
-    TimelineEventCard(category: "test", title: "test", dateString: "test", description: "test")
+    TimelineEventCard(category: "test", title: "test", dateString: "ygb", description: "test")
 }
