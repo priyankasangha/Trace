@@ -1,6 +1,9 @@
 <div align="center">
+    <img src="media/Trace_logo_light_rounded.png" alt="Logo" height="75px">
+</div>
+
+<div align="center">
   <h1>
-    <img src="media/Trace_logo_light_rounded.png" alt="Logo" height="20px">
     Trace
   </h1>
 </div>
@@ -13,6 +16,12 @@ A MacOS timeline app that allows users to keep track of ongoing events, such as 
 
 ## Features
 
+<details><summary> Sign In With AppleId </summary>
+<div style="display:inline-block; margin-right:10px; margin-left:10px; margin-top:10px;">
+    <img src="media/appleid_signin.gif" width=100% height=100%>
+
+</details>
+
 <details><summary> Creating a Timeline </summary>
 <div style="display:inline-block; margin-right:10px; margin-left:10px; margin-top:10px;">
     <img src="media/new_timeline.gif" width=100% height=100%>
@@ -20,9 +29,14 @@ A MacOS timeline app that allows users to keep track of ongoing events, such as 
 </details>
 
 <details><summary> Add an Event </summary>
+<div style="display:inline-block; margin-right:10px; margin-left:10px; margin-top:10px;">
+    <img src="media/new_event.gif" width=100% height=100%>
+</div>
 
 </details>
 
 <details><summary> Feedback Corner </summary>
+<div style="display:inline-block; margin-right:10px; margin-left:10px; margin-top:10px;">
+    <img src="media/feedback.gif" width=100% height=100%>
 
 </details>
