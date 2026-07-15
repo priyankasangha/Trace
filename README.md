@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="media/Trace_logo_light_rounded.png" alt="Logo" height="75px">
+    <img src="media/Trace_logo_light_rounded.png" alt="Logo" height="140px">
 </div>
 
 <div align="center">
@@ -16,7 +16,7 @@ A MacOS timeline app that allows users to keep track of ongoing events, such as 
 
 ## Features
 
-<details><summary> Sign In With AppleId </summary>
+<details><summary> Sign In With Apple ID </summary>
 <div style="display:inline-block; margin-right:10px; margin-left:10px; margin-top:10px;">
     <img src="media/appleid_signin.gif" width=100% height=100%>
 
