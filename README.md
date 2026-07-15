@@ -19,7 +19,7 @@ A MacOS timeline app that allows users to keep track of ongoing events, such as 
 <details><summary> Sign In With Apple ID </summary>
 <div style="display:inline-block; margin-right:10px; margin-left:10px; margin-top:10px;">
     <img src="media/appleid_signin.gif" width=100% height=100%>
-
+</div>
 </details>
 
 <details><summary> Creating a Timeline </summary>
